@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff30cc3ead8032346b42398c08337a0a, type: 3}
+  m_Name: 01022
+  m_EditorClassIdentifier: 
+  id: 01022
+  cardName: "[\u6B7B\u3078\u306E\u8A98\u3044]\u30B0\u30EA\u30E0\u30EA\u30FC\u30D1\u30FC"
+  characterName: "\u30B0\u30EA\u30E0\u30EA\u30FC\u30D1\u30FC"
+  cost: 1
+  cp: 6000
+  typeNumber: 1
+  attribute: "\u95C7"
+  attributeNumber: 4
+  race: "\u60AA\u9B54"
+  raceNumber: 4
+  effectType: 1
+  image: {fileID: 0}
