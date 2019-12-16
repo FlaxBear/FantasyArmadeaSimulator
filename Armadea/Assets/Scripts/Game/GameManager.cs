@@ -32,27 +32,14 @@ public class GameManager : MonoBehaviour
         "01004",
         "01004",
         "01004",
-        "01004",
-        "01004",
-        "01004",
-        "01004",
-        "01004",
-        "01004",
-        "01004",
-        "01004",
-        "01081",
         "01001",
-        "01002",
-        "01003",
-        "01041",
-        "01081",
-        "01081",
-        "01081",
-        "01081",
-        "01081",
-        "01004",
-        "01041",
-        "01081",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
         "01001",
         "01002",
         "01003",
@@ -94,6 +81,7 @@ public class GameManager : MonoBehaviour
                                             //)
     bool gameFirst = true;                  // 先攻保持プレイヤー管理用変数(true:プレイヤー, false:エネミー)
     public bool supportSetCardCheck = true; // メインフェイズ時、サポートセット制限管理用変数(true:未セット, false:セット済み)
+    short engiCount = 0;                   // 艶技発動回数
     public static GameManager instance;     // シングルトン化させるために必要な変数（どこからでもアクセスできるようにする)
 
     /** メソッド定義 */
@@ -121,7 +109,7 @@ public class GameManager : MonoBehaviour
     void startGame() 
     {
         gamePhase = 0;                      // メインフェイズから開始
-        gameFirst =true;                   // 先攻はプレイヤーに設定(のちに変更)
+        gameFirst = false;                   // 先攻はプレイヤーに設定(のちに変更)
         supportSetCardCheck = true;         // サポートセットフラグ
         SetFlagChange(false, false, false); // カード移動を一時的に無効させる
         settingInitHand();                  // 各プレイヤーに手札を配る
@@ -176,7 +164,7 @@ public class GameManager : MonoBehaviour
     /// <param name="engi">カードのプレハブ</param>
     void giveCardToHand(List<string> deck, Transform hand, CardController prefab)
     {
-        // デッキにカードが場合以外は、処理を行う
+        // デッキにカードが0枚以外は、処理を行う
         if(deck.Count > 0) {
             string cardID = deck[0];
             createCard(hand, prefab, cardID);
@@ -212,6 +200,7 @@ public class GameManager : MonoBehaviour
             case 2:
                 // 2:バトルフェイズ(艶技),
                 battlePhaseEngi();
+                Debug.Log(engiCount);
                 break;
             case 3:
                 // 3:バトルフェイズ(姫昇天)~次ターン準備
@@ -234,6 +223,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    /// <summary>メインフェーズ時の相手の処理</summary>
     void enemyMainPhase()
     {
         Debug.Log("相手の行動");
@@ -255,6 +245,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    /// <summary>バトルフェーズの相手の処理</summary>
     void enemyBattlePhaseCharSet()
     {
         Debug.Log("相手の行動");
@@ -279,24 +270,35 @@ public class GameManager : MonoBehaviour
             SetFlagChange(false, false, true);  // 艶技エリアのみ許可
         } else {
             // エネミー(相手)が出したなら許可、出していないなら次のフェーズ遷移処理
-            bool engiContinueCheck = enemyBattlePhaseEngi();
-            if(engiContinueCheck) {
-                SetFlagChange(false, false, true);  // 艶技エリアのみ許可
-            } else {
-                gamePhase++;
-                turnPhase();
+            // 1回だけ処理を行い、あとはpushEndTurnEndButton関数の方で処理を行う
+            if(engiCount == 0) {
+                // 相手は艶技を出すかどうかのチェック
+                bool engiContinueCheck = enemyBattlePhaseEngi();
+                if(engiContinueCheck) {
+                    // 出した場合、継続でプレイヤーに出す処理を行う
+                    engiCount++;
+                    Debug.Log("自分の艶技行動");
+                    SetFlagChange(false, false, true);  // 艶技エリアのみ許可
+                } else {
+                    // 出さない場合、次のフェーズへ
+                    gamePhase++;
+                    turnPhase();
+                }
             }
         }
     }
 
+    /// <summary>相手の艶技を出す処理</summary>
+    /// <returns>出した場合は,true 出さない場合は,false</returns>
     bool enemyBattlePhaseEngi()
     {
-        Debug.Log("相手の行動");
-        return false;
+        Debug.Log("相手の艶技行動");
+        return true;
     }
     
     /// <summary>バトルフェイズ(姫昇天)~次ターン準備までに行う処理</summary>
     void battlePhaseHimeToNextTurn() {
+        Debug.Log(engiCount);
         battlePhaseHime();
         battlePhaseCale();
         endPhase();
@@ -306,20 +308,73 @@ public class GameManager : MonoBehaviour
     /// <summary>バトルフェーズの姫昇天発動時に行う処理</summary>
     void battlePhaseHime(){
         Debug.Log("バトルフェーズ:姫昇天");
+        // プレイヤー(自分)側の処理
+        himeProcess(playerDeck, playerSupportTransform, playerMainTransform);
+        // エネミー(相手)側の処理
+        himeProcess(enemyDeck, enemySupportTransform, enemyMainTransform);
+    }
+
+    /// <summary>姫昇天を発動の処理</summary>
+    /// <param name="deck">デッキリスト</param>
+    /// <param name="supportTransform">サポートエリアのオブジェクト</param>
+    /// <param name="mainTransform">メインエリアのオブジェクト</param>
+    void himeProcess(List<string> deck, Transform supportTransform, Transform mainTransform) {
+        bool himeResult = false;
+        // デッキにカードが0枚場合以外は、処理を行う
+        if(deck.Count > 0) 
+        {
+            // デッキの1枚目をCardModelで取得
+            string cardID = playerDeck[0];
+            CardModel himeCard = new CardModel(cardID);
+            playerDeck.RemoveAt(0);
+            if(himeCard.effectType == 1) {
+                himeResult = himeCheck(supportTransform, mainTransform, himeCard);
+                if(himeResult) {
+                    Debug.Log("プレイヤー姫昇天発動");
+                }
+            }
+        }
     }
 
     /// <summary>バトルフェーズのCP計算時に行う処理</summary>
     void battlePhaseCale(){
         Debug.Log("CP計算");
+
+        CardController playerMainCard = playerMainTransform.GetComponentsInChildren<CardController>()[0];
+        CardController enemyMainCard = enemyMainTransform.GetComponentsInChildren<CardController>()[0];
+
+        if(playerMainCard.model.cp < enemyMainCard.model.cp) {
+            // 相手が勝った場合
+            enemyPoint++;
+            giveCardToHand(playerDeck, playerHandTransform, playerCardPrefab);
+        } else if(playerMainCard.model.cp > enemyMainCard.model.cp) {
+            // 自分が勝った場合
+            playerPoint++;
+            giveCardToHand(enemyDeck, enemyHandTransform, enemyCardPrefab);
+        }　else {
+            // 引き分け
+            giveCardToHand(playerDeck, playerHandTransform, playerCardPrefab);
+            giveCardToHand(enemyDeck, enemyHandTransform, enemyCardPrefab);
+        }
     }
 
     /// <summary>エンドフェイズに行う処理</summary>
     void endPhase(){
         Debug.Log("エンドフェイズ");
-        destroyMainCard(playerMainTransform);
-        destoryEngiCard(playerEngiTransform);
-        destroyMainCard(enemyMainTransform);
-        destoryEngiCard(enemyEngiTransform);
+        int playerHandCount = playerMainTransform.GetComponentsInChildren<CardController>().Length;
+        int enemyHandCount = enemyMainTransform.GetComponentsInChildren<CardController>().Length;
+
+        if(playerHandCount == 0) {
+            Debug.Log("Player Win");
+        } else if(enemyHandCount == 0) {
+            Debug.Log("Enemy Win");
+        } else {
+            // メインと艶技のエリアのカードを全て破壊
+            destroyMainCard(playerMainTransform);
+            destoryEngiCard(playerEngiTransform);
+            destroyMainCard(enemyMainTransform);
+            destoryEngiCard(enemyEngiTransform);
+        }
     }
 
     /// <summary>次ターン時のために行う処理</summary>
@@ -327,6 +382,7 @@ public class GameManager : MonoBehaviour
         gamePhase = 0;
         gameFirst = !gameFirst;
         supportSetCardCheck = true;
+        engiCount = 0;
         turnPhase();
     }
 
@@ -339,6 +395,126 @@ public class GameManager : MonoBehaviour
     {
         CardController card = Instantiate(prefab, hand, false);
         card.Init(cardID);
+    }
+
+    /// <summary>TurnEndButton押下時の実行させる処理関数</summary>
+    public void pushEndTurnEndButton() 
+    {
+        bool nextTurnCheck = true;
+        if(gameFirst) {
+            // プレイヤーが先攻の処理
+            switch(gamePhase)
+            {
+                case 0:
+                    // 0:メインフェイズ,
+                    enemyMainPhase();
+                    break;
+                case 1:
+                    // 1:バトルフェイズ(キャラセット), 
+                    enemyBattlePhaseCharSet();
+                    break;
+                case 2:
+                    // 2:バトルフェイズ(艶技),
+                    // 艶技のカードがセットされているかを判断し無ければ次のフェーズへ、有れば相手のセット処理を行う
+                    // 相手が出したなら継続、出さなけれな次のフェーズへ
+                    if(EngiCheckCount(playerEngiTransform) == 1) {
+                        engiCount++;
+                        Debug.Log(nextTurnCheck);
+                        nextTurnCheck = enemyBattlePhaseEngi();
+                        if(nextTurnCheck) {
+                            engiCount++;
+                            nextTurnCheck = false;
+                        } else {
+                            nextTurnCheck = true;
+                        }
+                    } else {
+                        nextTurnCheck = true;
+                    }
+                    break;
+                default:
+                    Debug.Log("Error");
+                    break;
+            }
+        } else {
+            // プレイヤーが後攻の場合の処理
+            if(gamePhase == 2) 
+            {
+                // 艶技の場合
+                if(EngiCheckCount(playerEngiTransform) == 1) {
+                    // 自分が艶技を出した場合
+                    engiCount++;
+                    nextTurnCheck = enemyBattlePhaseEngi();
+                    if(nextTurnCheck) {
+                        engiCount++;
+                        nextTurnCheck = false;
+                    } else {
+                        nextTurnCheck = true;
+                    }
+                } else {
+                    // 自分が艶技を出さなかった場合
+                    nextTurnCheck = true;
+                }
+            }
+        }
+
+        if(nextTurnCheck) {
+            gamePhase++;
+        }
+        turnPhase();
+    }
+
+    /// <summary>艶技エリアの枚数を返す</summary>
+    /// <param name="engiTransform">艶技エリアのオブジェクト</param>
+    /// <returns>艶技エリアの枚数</returns>
+    int EngiCheckCount(Transform engiTransform)
+    {
+        CardController[] engiCardList = engiTransform.GetComponentsInChildren<CardController>();
+        return engiCardList.Length;
+    }
+
+    /// <summary>メインエリアのカードを削除する</summary>
+    /// <param name="mainTrTransform">メインエリアのオブジェクト</param>
+    void destroyMainCard(Transform mainTrTransform)
+    {
+        CardController[] mainCardList = mainTrTransform.GetComponentsInChildren<CardController>();
+        if(mainCardList.Length == 1) {
+            Destroy(mainCardList[0].gameObject);
+        }
+    }
+
+    /// <summary>艶技エリアのカードを削除する</summary>
+    /// <param name="engiTransform">艶技エリアのオブジェクト</param>
+    void destoryEngiCard(Transform engiTransform)
+    {
+        CardController[] engiCardList = engiTransform.GetComponentsInChildren<CardController>();
+        if(engiCardList.Length == 1) {
+            Destroy(engiCardList[0].gameObject);
+        }
+    }
+
+    /// <summary>姫昇天を発動しているかどうかの判定</summary>
+    /// <param name="supportTransform">サポートエリアのオブジェクト</param>
+    /// <param name="mainTrTransform">メインエリアのオブジェクト</param>
+    /// <param name="himeCard">姫昇天用にデッキから引いたカード</param>
+    /// <returns></returns>
+    bool himeCheck(Transform supportTransform, Transform mainTrTransform, CardModel himeCard)
+    {
+        bool result = false;
+        // サポートのカードリストを取得し、比較
+        CardController[] suppertCardList = supportTransform.GetComponentsInChildren<CardController>();
+        foreach(CardController supportCard in suppertCardList)
+        {
+            if(supportCard.model.characterName == himeCard.characterName) {
+                result = true;
+                break;
+            }
+        }
+        // メインのカードを取得し、比較
+        CardController[] mainCardList = mainTrTransform.GetComponentsInChildren<CardController>();
+        if(mainCardList[0].model.characterName == himeCard.characterName) {
+            result = true;
+        }
+        return result;
     }
 
     // テスト用
@@ -372,66 +548,5 @@ public class GameManager : MonoBehaviour
 
         // カード破壊
         Destroy(testCard.gameObject);
-    }
-
-    /// <summary>TurnEndButton押下時の実行させる処理関数</summary>
-    public void pushEndTurnEndButton() 
-    {
-        bool nextTurnCheck = true;
-        if(gameFirst) {
-            switch(gamePhase)
-            {
-                case 0:
-                    // 0:メインフェイズ,
-                    enemyMainPhase();
-                    break;
-                case 1:
-                    // 1:バトルフェイズ(キャラセット), 
-                    enemyBattlePhaseCharSet();
-                    break;
-                case 2:
-                    // 2:バトルフェイズ(艶技),
-                    // 艶技のカードがセットされているかを判断し無ければ次のフェーズへ、有れば相手のセット処理を行う
-                    // 相手が出したなら継続、出さなけれな次のフェーズへ
-                    if(EngiCheckCount(playerEngiTransform) == 1) {
-                        nextTurnCheck = enemyBattlePhaseEngi();
-                        if(nextTurnCheck) {
-                            nextTurnCheck = false;
-                        } else {
-                            nextTurnCheck = true;
-                        }
-                    } else {
-                        nextTurnCheck = true;
-                    }
-                    break;
-            }
-        }
-        if(nextTurnCheck) {
-            gamePhase++;
-        }
-        turnPhase();
-    }
-    
-    // 艶技エリアの枚数を返す
-    int EngiCheckCount(Transform engiTransform)
-    {
-        CardController[] engiCardList = engiTransform.GetComponentsInChildren<CardController>();
-        return engiCardList.Length;
-    }
-
-    void destroyMainCard(Transform mainTrTransform)
-    {
-        CardController[] mainCardList = mainTrTransform.GetComponentsInChildren<CardController>();
-        if(mainCardList.Length == 1) {
-            Destroy(mainCardList[0].gameObject);
-        }
-    }
-
-    void destoryEngiCard(Transform engiTransform)
-    {
-        CardController[] engiCardList = engiTransform.GetComponentsInChildren<CardController>();
-        if(engiCardList.Length == 1) {
-            Destroy(engiCardList[0].gameObject);
-        }
     }
 }
