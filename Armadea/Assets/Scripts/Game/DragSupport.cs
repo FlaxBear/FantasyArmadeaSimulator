@@ -26,6 +26,7 @@ public class DragSupport : MonoBehaviour, IDropHandler
                         card.defaultParent = this.transform;
                         // カードをセットすればデッキから1枚引く
                         GameManager.instance.playerOneDrow();
+                        GameManager.instance.playerDeckCountRefresh();
                         // このターンはこれ以上カードをセット出来ないようにする
                         GameManager.instance.supportSetCardCheck = false;
                     }
@@ -41,6 +42,7 @@ public class DragSupport : MonoBehaviour, IDropHandler
                         // サポートエリアから1枚選択して捨て場に送る(削除)機能
                         card.defaultParent = this.transform;
                         GameManager.instance.playerOneDrow();
+                        GameManager.instance.playerDeckCountRefresh();
                         // このターンはこれ以上カードをセット出来ないようにする
                         GameManager.instance.supportSetCardCheck = false;
                     }

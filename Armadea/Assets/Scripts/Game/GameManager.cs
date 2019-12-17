@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 /**
     <summary>
@@ -12,17 +13,21 @@ public class GameManager : MonoBehaviour
 
     /** メンバー変数定義 */
     /** ゲームオブジェクト */
-    [SerializeField] CardController playerCardPrefab = default;   // 自分(Player)の生成するカードのオブジェクト(Inspectorに設定項目あり)
-    [SerializeField] CardController enemyCardPrefab = default;    // 相手(Enemy)の生成するカードのオブジェクト(Inspectorに設定項目あり)
-    [SerializeField] Transform playerHandTransform = default;     // 自分(Player)の手札部分のオブジェクト(Inspectorに設定項目あり)
-    [SerializeField] Transform enemyHandTransform = default;      // 相手(Enemy)の手札部分のオブジェクト(Inspectorに設定項目あり)
-    [SerializeField] Transform playerSupportTransform = default;  // 自分(Player)のサポート部分のオブジェクト(Inspectorに設定項目あり)
-    [SerializeField] Transform enemySupportTransform = default;   // 相手(Enemy)のサポート部分のオブジェクト(Inspectorに設定項目あり)
-    [SerializeField] Transform playerMainTransform = default;     // 自分(Player)のメイン部分のオブジェクト(Inspectorに設定項目あり)
-    [SerializeField] Transform enemyMainTransform = default;      // 相手(Enemy)のメイン部分のオブジェクト(Inspectorに設定項目あり)
-    [SerializeField] Transform playerEngiTransform = default;     // 自分(Player)の艶技部分のオブジェクト(Inspectorに設定項目あり)
-    [SerializeField] Transform enemyEngiTransform = default;      // 相手(Enemy)の艶技部分のオブジェクト(Inspectorに設定項目あり)
-    
+    [SerializeField] CardController playerCardPrefab = default;     // 自分(Player)の生成するカードのオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] CardController enemyCardPrefab = default;      // 相手(Enemy)の生成するカードのオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Transform playerHandTransform = default;       // 自分(Player)の手札部分のオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Transform enemyHandTransform = default;        // 相手(Enemy)の手札部分のオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Transform playerSupportTransform = default;    // 自分(Player)のサポート部分のオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Transform enemySupportTransform = default;     // 相手(Enemy)のサポート部分のオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Transform playerMainTransform = default;       // 自分(Player)のメイン部分のオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Transform enemyMainTransform = default;        // 相手(Enemy)のメイン部分のオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Transform playerEngiTransform = default;       // 自分(Player)の艶技部分のオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Transform enemyEngiTransform = default;        // 相手(Enemy)の艶技部分のオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Text playerDeckCount = default;                // 自分(Player)のデッキカウントテキストのオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Text enemyDeckCount = default;                 // 相手(Enemy)のデッキカウントテキストのオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Text playerPointCount = default;               // 自分(Player)のポイントカウントテキストとのオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Text enemyPointCount = default;                // 相手(Enemy)のデポイントカウントテキストとのオブジェクト(Inspectorに設定項目あり)
+
     /** ゲーム内使用変数 */
     // 自分(Player)のデッキリスト変数
     List<string> playerDeck = new List<string>() {
@@ -32,27 +37,22 @@ public class GameManager : MonoBehaviour
         "01004",
         "01004",
         "01004",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01002",
-        "01003",
-        "01041",
-        "01081",
-        "01081",
-        "01081",
-        "01081",
-        "01081"
+        "01004",
+        "01004",
+        "01004",
+        "01004"
     };
 
     // 相手(Enemy)のデッキリスト変数
     List<string> enemyDeck = new List<string>() {
+        "01004",
+        "01004",
+        "01004",
+        "01004",
+        "01004",
+        "01004",
+        "01001",
+        "01001",
         "01006",
         "01007",
         "01008",
@@ -109,10 +109,12 @@ public class GameManager : MonoBehaviour
     void startGame() 
     {
         gamePhase = 0;                      // メインフェイズから開始
-        gameFirst = false;                   // 先攻はプレイヤーに設定(のちに変更)
+        gameFirst = true;                   // 先攻はプレイヤーに設定(のちに変更)
         supportSetCardCheck = true;         // サポートセットフラグ
         SetFlagChange(false, false, false); // カード移動を一時的に無効させる
         settingInitHand();                  // 各プレイヤーに手札を配る
+        playerDeckCountRefresh();           // プレイヤーのデッキカウントテキストを更新
+        enemyDeckCountRefresh();            // エネミーのデッキカウントテキストを更新
         turnPhase();                        // フェイズへ
     }
 
@@ -198,9 +200,10 @@ public class GameManager : MonoBehaviour
                 battlePhaseCharSet();
                 break;
             case 2:
+                // サポートエリアタイプ一致CP補正
+                supportTypeCardCPChange();
                 // 2:バトルフェイズ(艶技),
                 battlePhaseEngi();
-                Debug.Log(engiCount);
                 break;
             case 3:
                 // 3:バトルフェイズ(姫昇天)~次ターン準備
@@ -232,6 +235,7 @@ public class GameManager : MonoBehaviour
         // カードを移動
         card.transform.SetParent(enemySupportTransform);
         enemyOneDrow();
+        enemyDeckCountRefresh();
     }
 
     /// <summary>バトルフェーズのキャラクターセット時に行う処理</summary>
@@ -293,12 +297,12 @@ public class GameManager : MonoBehaviour
     bool enemyBattlePhaseEngi()
     {
         Debug.Log("相手の艶技行動");
-        return true;
+        return false;
     }
     
     /// <summary>バトルフェイズ(姫昇天)~次ターン準備までに行う処理</summary>
     void battlePhaseHimeToNextTurn() {
-        Debug.Log(engiCount);
+        engiJudgment();
         battlePhaseHime();
         battlePhaseCale();
         endPhase();
@@ -312,6 +316,8 @@ public class GameManager : MonoBehaviour
         himeProcess(playerDeck, playerSupportTransform, playerMainTransform);
         // エネミー(相手)側の処理
         himeProcess(enemyDeck, enemySupportTransform, enemyMainTransform);
+        playerDeckCountRefresh();
+        enemyDeckCountRefresh();
     }
 
     /// <summary>姫昇天を発動の処理</summary>
@@ -347,14 +353,19 @@ public class GameManager : MonoBehaviour
             // 相手が勝った場合
             enemyPoint++;
             giveCardToHand(playerDeck, playerHandTransform, playerCardPrefab);
+            enemyPointRefresh();
+            Debug.Log("相手の勝ち");
         } else if(playerMainCard.model.cp > enemyMainCard.model.cp) {
             // 自分が勝った場合
             playerPoint++;
             giveCardToHand(enemyDeck, enemyHandTransform, enemyCardPrefab);
+            playerPointRefresh();
+            Debug.Log("自分の勝ち");
         }　else {
             // 引き分け
             giveCardToHand(playerDeck, playerHandTransform, playerCardPrefab);
             giveCardToHand(enemyDeck, enemyHandTransform, enemyCardPrefab);
+            Debug.Log("引き分け");
         }
     }
 
@@ -515,6 +526,91 @@ public class GameManager : MonoBehaviour
             result = true;
         }
         return result;
+    }
+
+    void supportTypeCardCPChange()
+    {
+        // プレイヤー(自分)のサポートエリアのオブジェクト
+        CardController[] playerSuppertCardList = playerSupportTransform.GetComponentsInChildren<CardController>();
+        // エネミー(相手)のサポートエリアのオブジェクト
+        CardController[] enemySuppertCardList = enemySupportTransform.GetComponentsInChildren<CardController>();
+        // プレイヤー(自分)のメインエリアのオブジェクト
+        CardController playerMainCard = playerMainTransform.GetComponentsInChildren<CardController>()[0];
+        // エネミー(相手)のメインエリアのオブジェクト
+        CardController enemyMainCard = enemyMainTransform.GetComponentsInChildren<CardController>()[0];
+
+        // プレイヤー(自分)の処理
+        int addCp = 0;
+        foreach(CardController supportCard in playerSuppertCardList)
+        {
+            
+            if(playerMainCard.model.type == supportCard.model.type)
+            {
+                addCp += 1000;
+            }
+        }
+        playerMainCard.model.changeCP(addCp);
+        playerMainCard.Refresh();
+
+        addCp = 0;
+        foreach(CardController supportCard in enemySuppertCardList)
+        {
+            
+            if(enemyMainCard.model.type == supportCard.model.type)
+            {
+                addCp += 1000;
+            }
+        }
+        Debug.Log(addCp);
+        enemyMainCard.model.changeCP(addCp);
+        enemyMainCard.Refresh();
+    }
+
+    public void playerDeckCountRefresh()
+    {
+        playerDeckCount.text = "Deck : " + playerDeck.Count.ToString();
+    }
+
+    public void enemyDeckCountRefresh()
+    {
+        enemyDeckCount.text = "Deck : " + enemyDeck.Count.ToString();
+    }
+
+    void playerPointRefresh()
+    {
+        playerPointCount.text = "Point : " + playerPoint;
+    }
+
+    void enemyPointRefresh()
+    {
+        enemyPointCount.text = "Point : " + enemyPoint;
+    }
+
+    void engiJudgment()
+    {
+        // 艶技を使っているか
+        if(engiCount != 0)
+        {
+            if(engiCount % 2 == 0) {
+                // 偶数なら後攻が勝利している
+                if(gameFirst) {
+                    enemyPoint++;
+                    enemyPointRefresh();
+                } else {
+                    playerPoint++;
+                    playerPointRefresh();
+                }
+            } else {
+                // 奇数なら先攻が勝利している
+                if(gameFirst) {
+                    playerPoint++;
+                    playerPointRefresh();
+                } else {
+                    enemyPoint++;
+                    enemyPointRefresh();
+                }
+            }
+        }
     }
 
     // テスト用

@@ -230,6 +230,8 @@ MonoBehaviour:
   enemyMainTransform: {fileID: 1663069471}
   playerEngiTransform: {fileID: 547926058}
   enemyEngiTransform: {fileID: 204729374}
+  playerDeckCount: {fileID: 717498107}
+  enemyDeckCount: {fileID: 2082287719}
   supportSetCardCheck: 1
 --- !u!4 &79283574
 Transform:
