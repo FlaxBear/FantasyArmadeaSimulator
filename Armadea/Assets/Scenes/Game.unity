@@ -232,6 +232,45 @@ MonoBehaviour:
   enemyEngiTransform: {fileID: 204729374}
   playerDeckCount: {fileID: 717498107}
   enemyDeckCount: {fileID: 2082287719}
+  playerPointCount: {fileID: 1691774881}
+  enemyPointCount: {fileID: 1402211290}
+  playerDeck:
+  - 01004
+  - 01004
+  - 01004
+  - 01004
+  - 01004
+  - 01004
+  - 01004
+  - 01004
+  - 01004
+  - 01004
+  enemyDeck:
+  - 01004
+  - 01004
+  - 01004
+  - 01004
+  - 01004
+  - 01004
+  - 01001
+  - 01001
+  - 01006
+  - 01007
+  - 01008
+  - 01009
+  - 01010
+  - 01004
+  - 01041
+  - 01081
+  - 01001
+  - 01002
+  - 01003
+  - 01041
+  - 01081
+  - 01081
+  - 01081
+  - 01081
+  - 01081
   supportSetCardCheck: 1
 --- !u!4 &79283574
 Transform:

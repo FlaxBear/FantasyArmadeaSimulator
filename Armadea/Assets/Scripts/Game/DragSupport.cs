@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/**
-    サポートエリアにドラッグされた際に実行されるクラス
-*/
+/// <summary>サポートエリアにドラッグされた際に実行されるクラス</summary>
 public class DragSupport : MonoBehaviour, IDropHandler
 {
     /// <summary>サポートエリアにドラッグされた際に実行される関数</summary>
@@ -25,7 +23,7 @@ public class DragSupport : MonoBehaviour, IDropHandler
                     if(card.defaultParent != this.transform) {
                         card.defaultParent = this.transform;
                         // カードをセットすればデッキから1枚引く
-                        GameManager.instance.playerOneDrow();
+                        GameManager.instance.playerOneDraw();
                         GameManager.instance.playerDeckCountRefresh();
                         // このターンはこれ以上カードをセット出来ないようにする
                         GameManager.instance.supportSetCardCheck = false;
@@ -41,7 +39,7 @@ public class DragSupport : MonoBehaviour, IDropHandler
                     if(card.defaultParent != this.transform) {
                         // サポートエリアから1枚選択して捨て場に送る(削除)機能
                         card.defaultParent = this.transform;
-                        GameManager.instance.playerOneDrow();
+                        GameManager.instance.playerOneDraw();
                         GameManager.instance.playerDeckCountRefresh();
                         // このターンはこれ以上カードをセット出来ないようにする
                         GameManager.instance.supportSetCardCheck = false;

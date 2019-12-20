@@ -3,11 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/**
-    <summary>
-    Card Objectをマウス操作を行うためのクラス
-    </summary>
-*/
+/// <summary>Card Objectをマウス操作を行うためのクラス</summary>
 public class CardMovement : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler
 {
     // カードの操作で特定の場所以外でクリックが離された時に手札に戻るようになっている

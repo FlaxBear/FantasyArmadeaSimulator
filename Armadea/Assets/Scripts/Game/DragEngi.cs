@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/**
-    艶技エリアにドラッグされた際に実行されるクラス
-*/
+/// <summary>艶技エリアにドラッグされた際に実行されるクラス</summary>
 public class DragEngi : MonoBehaviour, IDropHandler
 {
+    DeckController deckController;  //  デッキコントローラー
+    
     /// <summary>艶技エリアにドラッグされた際に実行される関数</summary>
     /// <param name="eventData">イベントデータ(固定)</param>
     public void OnDrop(PointerEventData eventData)
@@ -23,7 +23,7 @@ public class DragEngi : MonoBehaviour, IDropHandler
             // 艶技持ちのカード以外セット出来ないようにする
             if(CardInfo.model.effectType == 2) {
                 if(card != null) { card.defaultParent = this.transform;}
-                GameManager.instance.playerOneDrow();
+                GameManager.instance.playerOneDraw();
             }
         }
     }
