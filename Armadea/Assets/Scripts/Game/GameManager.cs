@@ -24,53 +24,103 @@ public class GameManager : MonoBehaviour
     [SerializeField] Text enemyDeckCount = default;                 // 相手(Enemy)のデッキカウントテキストのオブジェクト(Inspectorに設定項目あり)
     [SerializeField] Text playerPointCount = default;               // 自分(Player)のポイントカウントテキストとのオブジェクト(Inspectorに設定項目あり)
     [SerializeField] Text enemyPointCount = default;                // 相手(Enemy)のデポイントカウントテキストとのオブジェクト(Inspectorに設定項目あり)
-    PointCountController pointCount;                                // ポイントコントローラー
-    DeckController deckController;                                  // デッキコントローラー
-    EnemyController enemyController;                                // エネミーコントローラー
+    PointCountController pointCount = default;                      // ポイントコントローラー
+    DeckController deckController = default;                        // デッキコントローラー
+    EnemyController enemyController = default;                      // エネミーコントローラー
+    HimeAscension himeAscension = default;                          // 姫昇天用のクラス
 
     /** ゲーム内使用変数 */
     // 自分(Player)のデッキリスト変数
-    public List<string> playerDeck = new List<string>() {
-        "01004",
-        "01004",
-        "01004",
-        "01004",
-        "01004",
-        "01004",
-        "01004",
-        "01004",
-        "01004",
-        "01004"
+    List<string> playerDeck = new List<string>() {
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
     };
 
     // 相手(Enemy)のデッキリスト変数
-    public List<string> enemyDeck = new List<string>() {
-        "01004",
-        "01004",
-        "01004",
-        "01004",
-        "01004",
-        "01004",
-        "01001",
-        "01001",
-        "01006",
-        "01007",
-        "01008",
-        "01009",
-        "01010",
-        "01004",
-        "01041",
-        "01081",
-        "01001",
-        "01002",
-        "01003",
-        "01041",
-        "01081",
-        "01081",
-        "01081",
-        "01081",
-        "01081"
+    List<string> enemyDeck = new List<string>() {
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
+        "01035",
     };
+
     int playerPoint = 0;                    // プレイヤー(自分)のポイント置き場
     int enemyPoint = 0;                     // エネミー(相手)のポイント置き場
     byte gamePhase = 0;                     // フェーズ管理用変数(
@@ -80,7 +130,7 @@ public class GameManager : MonoBehaviour
                                             // 3:バトルフェイズ(姫昇天)~次ターン準備
                                             //)
     bool gameFirst = true;                  // 先攻保持プレイヤー管理用変数(true:プレイヤー, false:エネミー)
-    public bool supportSetCardCheck = true; // メインフェイズ時、サポートセット制限管理用変数(true:未セット, false:セット済み)
+    bool supportSetCardCheck = true;        // メインフェイズ時、サポートセット制限管理用変数(true:未セット, false:セット済み)
     short engiCount = 0;                   // 艶技発動回数
     public static GameManager instance;     // シングルトン化させるために必要な変数（どこからでもアクセスできるようにする)
 
@@ -107,6 +157,21 @@ public class GameManager : MonoBehaviour
     /// <summary>ゲーム開始時の処理を行う関数</summary>
     void startGame() 
     {
+        pointCount = new PointCountController();
+        deckController = new DeckController();
+        enemyController = new EnemyController();
+        himeAscension = new HimeAscension(
+            playerSupportTransform, 
+            enemySupportTransform, 
+            playerMainTransform, 
+            enemyMainTransform, 
+            playerPoint, 
+            enemyPoint
+        );
+
+        Debug.Log(playerDeck.Count);
+        Debug.Log(enemyDeck.Count);
+
         gamePhase = 0;                                                          // メインフェイズから開始
         gameFirst = true;                                                       // 先攻はプレイヤーに設定(のちに変更)
         supportSetCardCheck = true;                                             // サポートセットフラグ
@@ -299,8 +364,8 @@ public class GameManager : MonoBehaviour
     /// <returns>フェイズを続行するかどうかを判断</returns>
     bool engiJudgment()
     {
-        bool flag = false;  // true: このフェイズで終了
-                            // false: 次のフェイズに移行
+        bool flag = true;  // true: 次のフェイズに移行
+                            // false: このフェイズで終了
 
         // 艶技を使っているか
         if(engiCount != 0)
@@ -324,7 +389,7 @@ public class GameManager : MonoBehaviour
                     pointCount.pointRefresh(enemyPointCount, enemyPoint);    
                 }
             }
-            flag = true;
+            flag = false;
         }
 
         return flag;
@@ -334,18 +399,20 @@ public class GameManager : MonoBehaviour
     void battlePhaseHime(){
         Debug.Log("バトルフェーズ:姫昇天");
         // プレイヤー(自分)側の処理
-        himeProcess(playerDeck, playerSupportTransform, playerMainTransform);
+        himeProcess(playerDeck, playerSupportTransform, playerMainTransform, enemyMainTransform, 1);
         deckController.deckCountRefresh(playerDeckCount, playerDeck);
         // エネミー(相手)側の処理
-        himeProcess(enemyDeck, enemySupportTransform, enemyMainTransform);
+        himeProcess(enemyDeck, enemySupportTransform, enemyMainTransform, playerMainTransform, 2);
         deckController.deckCountRefresh(enemyDeckCount, enemyDeck);
     }
 
     /// <summary>姫昇天を発動の処理</summary>
     /// <param name="deck">デッキリスト</param>
     /// <param name="supportTransform">サポートエリアのオブジェクト</param>
-    /// <param name="mainTransform">メインエリアのオブジェクト</param>
-    void himeProcess(List<string> deck, Transform supportTransform, Transform mainTransform) {
+    /// <param name="playerMainTransform">メインエリアのオブジェクト</param>
+    /// <param name="enemyMainTransform">メインエリアのオブジェクト</param>
+    /// <param name="playerNumber">誰が実行したか(1:プレイヤー(自分),2:エネミー(相手))</param>
+    void himeProcess(List<string> deck, Transform supportTransform, Transform playerMainTransform, Transform enemyMainTransform, short playerNumber) {
         bool himeResult = false;
         // デッキにカードが0枚場合以外は、処理を行う
         if(deck.Count > 0) 
@@ -355,8 +422,9 @@ public class GameManager : MonoBehaviour
             CardModel himeCard = new CardModel(cardID);
             playerDeck.RemoveAt(0);
             if(himeCard.effectType == 1) {
-                himeResult = himeCheck(supportTransform, mainTransform, himeCard);
+                himeResult = himeCheck(supportTransform, playerMainTransform, himeCard);
                 if(himeResult) {
+                    himeAscension.himeAscension(himeCard.effect, playerNumber);
                     Debug.Log("プレイヤー姫昇天発動");
                 }
             }
@@ -395,6 +463,9 @@ public class GameManager : MonoBehaviour
         CardController playerMainCard = playerMainTransform.GetComponentsInChildren<CardController>()[0];
         CardController enemyMainCard = enemyMainTransform.GetComponentsInChildren<CardController>()[0];
 
+        Debug.Log("Player:" + playerMainCard.model.cp.ToString());
+        Debug.Log("Enemy:" + enemyMainCard.model.cp.ToString());
+        
         if(playerMainCard.model.cp < enemyMainCard.model.cp) {
             // 相手が勝った場合
             enemyPoint++;
@@ -418,8 +489,8 @@ public class GameManager : MonoBehaviour
     /// <summary>エンドフェイズに行う処理</summary>
     void endPhase(){
         Debug.Log("エンドフェイズ");
-        int playerHandCount = playerMainTransform.GetComponentsInChildren<CardController>().Length;
-        int enemyHandCount = enemyMainTransform.GetComponentsInChildren<CardController>().Length;
+        int playerHandCount = playerHandTransform.GetComponentsInChildren<CardController>().Length;
+        int enemyHandCount = enemyHandTransform.GetComponentsInChildren<CardController>().Length;
 
         if(playerHandCount == 0) {
             Debug.Log("Player Win");
@@ -560,5 +631,25 @@ public class GameManager : MonoBehaviour
     public void costPay(int cost)
     {
         deckController.costPay(playerDeck, cost, playerDeckCount);
+    }
+
+    /// <summary>カードのオブジェクトを特定の場所に生成する関数</summary>
+    /// <param name="hand">手札フィールドのオブジェクト</param>
+    /// <param name="prefab">Player用プレハブかEnemy用プレハブか</param>
+    /// <param name="cardID">生成するカードID</param>
+    public void createCard(Transform hand, CardController prefab, string cardID) 
+    {
+        CardController card = Instantiate(prefab, hand, false);
+        card.Init(cardID);
+    }
+
+    public bool supportSetCardCheckResult()
+    {
+        return supportSetCardCheck;
+    }
+
+    public void changeSupportSetCardCheck(bool result)
+    {
+        supportSetCardCheck = result;
     }
 }

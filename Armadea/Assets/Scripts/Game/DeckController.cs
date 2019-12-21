@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>デッキコントローラー</summary>
-public class DeckController : MonoBehaviour
+public class DeckController
 {
 
     /// <summary>デッキからカードIDを元にカードモデルを生成し、手札部分のオブジェクトに加える関数</summary>
@@ -16,20 +16,11 @@ public class DeckController : MonoBehaviour
         // デッキにカードが0枚以外は、処理を行う
         if(deck.Count > 0) {
             string cardID = deck[0];
-            createCard(hand, prefab, cardID);
+            GameManager.instance.createCard(hand, prefab, cardID);
             deck.RemoveAt(0);
         }
     }
     
-    /// <summary>カードのオブジェクトを特定の場所に生成する関数</summary>
-    /// <param name="hand">手札フィールドのオブジェクト</param>
-    /// <param name="prefab">Player用プレハブかEnemy用プレハブか</param>
-    /// <param name="cardID">生成するカードID</param>
-    void createCard(Transform hand, CardController prefab, string cardID) 
-    {
-        CardController card = Instantiate(prefab, hand, false);
-        card.Init(cardID);
-    }
 
     /// <summary>デッキ枚数表示用のテキストの更新処理</summary>
     /// <param name="deckCount">デッキ枚数表示用のテキストオブジェクト</param>

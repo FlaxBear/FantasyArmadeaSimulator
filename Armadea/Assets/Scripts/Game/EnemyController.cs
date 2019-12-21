@@ -4,9 +4,13 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>相手(エネミー)の操作を行っているクラス</summary>
-public class EnemyController : MonoBehaviour
+public class EnemyController
 {
     DeckController deckController;                  // デッキコントローラー
+
+    public EnemyController() {
+        deckController = new DeckController();
+    }
 
     /// <summary>メインフェーズ時の相手の処理</summary>
     /// <param name="handTransform">手札のオブジェクト</param>
@@ -19,7 +23,7 @@ public class EnemyController : MonoBehaviour
         Debug.Log("相手の行動");
         // 手札の一番最初のカードを出すようにしている
         CardController[] cardList = handTransform.GetComponentsInChildren<CardController>();
-        CardController card = cardList[1];
+        CardController card = cardList[0];
         // カードを移動
         card.transform.SetParent(supportTransform);
         // ドロー&デッキカウント更新

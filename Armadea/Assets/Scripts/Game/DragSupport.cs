@@ -17,7 +17,7 @@ public class DragSupport : MonoBehaviour, IDropHandler
         if(this.transform.GetComponentsInChildren<CardController>().Length < 4) {
             // 4枚以下の場合
             // このターンで既にサポートエリアにカードセットしているがどうかの判定
-            if(GameManager.instance.supportSetCardCheck) {
+            if(GameManager.instance.supportSetCardCheckResult()) {
                 if(card != null) {
                     // 手札から手札に送られることを防ぐ
                     if(card.defaultParent != this.transform) {
@@ -26,14 +26,14 @@ public class DragSupport : MonoBehaviour, IDropHandler
                         GameManager.instance.playerOneDraw();
                         GameManager.instance.playerDeckCountRefresh();
                         // このターンはこれ以上カードをセット出来ないようにする
-                        GameManager.instance.supportSetCardCheck = false;
+                        GameManager.instance.changeSupportSetCardCheck(false);
                     }
                 }
             }
         } else {
             // 4枚の場合
             // このターンで既にサポートエリアにカードセットしているがどうかの判定
-            if(GameManager.instance.supportSetCardCheck) {
+            if(GameManager.instance.supportSetCardCheckResult()) {
                 if(card != null) {
                     // 手札から手札に送られることを防ぐ
                     if(card.defaultParent != this.transform) {
@@ -42,7 +42,7 @@ public class DragSupport : MonoBehaviour, IDropHandler
                         GameManager.instance.playerOneDraw();
                         GameManager.instance.playerDeckCountRefresh();
                         // このターンはこれ以上カードをセット出来ないようにする
-                        GameManager.instance.supportSetCardCheck = false;
+                        GameManager.instance.changeSupportSetCardCheck(false);
                     }
                 }
             }
