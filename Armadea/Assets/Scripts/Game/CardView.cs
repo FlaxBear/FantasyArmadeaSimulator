@@ -10,12 +10,13 @@ using UnityEngine.UI;
 */
 public class CardView : MonoBehaviour
 {
-    [SerializeField] Text nameText = default;       // カード名を表示するテキストオブジェクト(Inspectorに設定項目あり)
-    [SerializeField] Text cpText = default;         // CPを表示するテキストオブジェクト(Inspectorに設定項目あり)
-    [SerializeField] Text costText = default;       // コストを表示するテキストオブジェクト(Inspectorに設定項目あり)
-    [SerializeField] Text attributeText = default;  // 属性を表示するテキストオブジェクト(Inspectorに設定項目あり)
-    [SerializeField] Text raceText = default;       // 種族を表示するテキストオブジェクト(Inspectorに設定項目あり)
-    [SerializeField] Image image = default;         // カード画像を表示するテキストオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Text nameText = default;           // カード名を表示するテキストオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Text cpText = default;             // CPを表示するテキストオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Text costText = default;           // コストを表示するテキストオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Text attributeText = default;      // 属性を表示するテキストオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Text raceText = default;           // 種族を表示するテキストオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Image image = default;             // カード画像を表示するテキストオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Image engieffect = default;        // 艶技時に出すことが可能であるかを表示するパネルオブジェクト(Inspectorに設定項目あり)
 
     /// <summary>表示させるための各オブジェクトの設定</summary>
     /// <param name="cardModel">カードモデル</param>
@@ -28,6 +29,7 @@ public class CardView : MonoBehaviour
         attributeText.text = cardModel.attribute;               // 属性
         raceText.text = cardModel.race;                         // 種族
         image.sprite = cardModel.image;                         // カード画像
+        engieffect.enabled = false;
         // 画像が表示されない場合、タイプが分からないのでimageのカラー色でタイプを分かるようにする
         switch(cardModel.type) 
         {
@@ -53,5 +55,10 @@ public class CardView : MonoBehaviour
     public void Refresh(CardModel cardModel)
     {
         cpText.text = cardModel.cp.ToString();
+    }
+
+    public void setEngiEffect(bool changeResult)
+    {
+        engieffect.enabled = changeResult;
     }
 }

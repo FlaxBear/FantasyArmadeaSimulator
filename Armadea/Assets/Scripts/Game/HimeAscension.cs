@@ -9,8 +9,6 @@ public class HimeAscension
     Transform enemySupportTransform = default;     // 相手(Enemy)のサポート部分のオブジェクト
     Transform playerMainTransform = default;       // 自分(Player)のメイン部分のオブジェクト
     Transform enemyMainTransform = default;        // 相手(Enemy)のメイン部分のオブジェクト
-    int playerPoint = default;                      // 自分(Player)のポイント
-    int enemyPoint = default;                       // 相手(Enemy)のポイント
 
     /// <summary>コンストラクタ用の処理</summary>
     /// <param name="playerSupport">プレイヤー(自分)のサポートエリアのオブジェクト</param>
@@ -25,8 +23,6 @@ public class HimeAscension
         enemySupportTransform = enemySupport;
         playerMainTransform = playerMain;
         enemyMainTransform = enemyMain;
-        playerPoint = playerP;
-        enemyPoint = enemyP;
     }
 
     /// <summary>姫昇天処理用のテキストを解析して処理を行う</summary>
@@ -280,9 +276,9 @@ public class HimeAscension
     int playerPointCount(string cp, short playerNumber) {
         int count = 0;
         if(playerNumber == 1) {
-            count = playerPoint;
+            count = GameManager.instance.getPlayerPoint();
         } else if(playerNumber == 2) {
-            count = enemyPoint;
+            count = GameManager.instance.getEnemyPoint();
         } else {
             return 0;
         }
@@ -399,9 +395,9 @@ public class HimeAscension
     int enemyPointCount(string cp, short playerNumber) {
         int count = 0;
         if(playerNumber == 1) {
-            count = enemyPoint;
+            count = GameManager.instance.getEnemyPoint();
         } else if(playerNumber == 2) {
-            count = playerPoint;
+            count = GameManager.instance.getPlayerPoint();
         } else {
             return 0;
         }

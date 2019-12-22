@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff30cc3ead8032346b42398c08337a0a, type: 3}
   m_Name: 01006
   m_EditorClassIdentifier: 
-  id: 01006[
+  id: 01006
   cardName: "[\u6226\u4E59\u5973]\u30F4\u30A1\u30EB\u30AD\u30EA\u30FC"
   characterName: "\u30F4\u30A1\u30EB\u30AD\u30EA\u30FC"
   cost: 2
@@ -23,4 +23,5 @@ MonoBehaviour:
   race: "\u795E\u8056"
   raceNumber: 3
   effectType: 2
+  effect: 6
   image: {fileID: 0}

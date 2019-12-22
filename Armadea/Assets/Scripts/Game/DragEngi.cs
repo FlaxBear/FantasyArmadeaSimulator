@@ -21,7 +21,7 @@ public class DragEngi : MonoBehaviour, IDropHandler
         if(this.transform.GetComponentsInChildren<CardController>().Length < 1)
         {
             // 艶技持ちのカード以外セット出来ないようにする
-            if(CardInfo.model.effectType == 2) {
+            if(CardInfo.model.effectType == 2 && CardInfo.model.engiCheck) {
                 if(card != null) { card.defaultParent = this.transform;}
                 GameManager.instance.playerOneDraw();
             }

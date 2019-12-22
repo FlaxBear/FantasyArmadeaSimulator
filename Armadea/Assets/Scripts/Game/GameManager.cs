@@ -28,13 +28,13 @@ public class GameManager : MonoBehaviour
     DeckController deckController = default;                        // デッキコントローラー
     EnemyController enemyController = default;                      // エネミーコントローラー
     HimeAscension himeAscension = default;                          // 姫昇天用のクラス
-
+    EngiProcess engiProcess = default;                              // 艶技用のクラス
     /** ゲーム内使用変数 */
     // 自分(Player)のデッキリスト変数
     List<string> playerDeck = new List<string>() {
         "01001",
         "01001",
-        "01001",
+        "01006",
         "01001",
         "01001",
         "01001",
@@ -168,15 +168,17 @@ public class GameManager : MonoBehaviour
             playerPoint, 
             enemyPoint
         );
-
-        Debug.Log(playerDeck.Count);
-        Debug.Log(enemyDeck.Count);
-
+        engiProcess = new EngiProcess(
+            playerSupportTransform, 
+            enemySupportTransform, 
+            playerMainTransform, 
+            enemyMainTransform
+        );
         gamePhase = 0;                                                          // メインフェイズから開始
         gameFirst = true;                                                       // 先攻はプレイヤーに設定(のちに変更)
         supportSetCardCheck = true;                                             // サポートセットフラグ
         playerPoint = 0;                                                        // プレイヤー(自分)のポイント
-        enemyPoint = 0;                                                         // エネミー(相手)のポイント
+        enemyPoint = 3;                                                         // エネミー(相手)のポイント
         SetFlagChange(false, false, false);                                     // カード移動を一時的に無効させる
         settingInitHand();                                                      // 各プレイヤーに手札を配る
         deckController.deckCountRefresh(playerDeckCount, playerDeck);           // プレイヤーのデッキカウントテキストを更新
@@ -329,6 +331,18 @@ public class GameManager : MonoBehaviour
         
         // プレイヤー(自分)が先攻なら許可、後攻ならエネミー(相手)の処理を行う
         if(gameFirst) {
+            CardController[] playerHandList = playerHandTransform.GetComponentsInChildren<CardController>();
+            foreach(CardController playerHandCard in playerHandList) {
+                if(playerHandCard.model.effectType == 2) {
+                    bool result = engiProcess.engiProcess(playerHandCard.model.effect, 1);
+                    if(result){
+                        playerHandCard.model.engiCheck = true;
+                    } else {
+                        playerHandCard.model.engiCheck = false;
+                    }
+                    playerHandCard.view.setEngiEffect(result);
+                }
+            }
             SetFlagChange(false, false, true);  // 艶技エリアのみ許可
         } else {
             // エネミー(相手)が出したなら許可、出していないなら次のフェーズ遷移処理
@@ -651,5 +665,15 @@ public class GameManager : MonoBehaviour
     public void changeSupportSetCardCheck(bool result)
     {
         supportSetCardCheck = result;
+    }
+
+    public int getPlayerPoint()
+    {
+        return playerPoint;
+    }
+
+    public int getEnemyPoint()
+    {
+        return enemyPoint;
     }
 }

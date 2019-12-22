@@ -20,8 +20,8 @@ public class CardModel
     public string race;             // 種族(表示用)
     public short raceNumber;        // 種族番号(内部処理用)
     public short effectType;        // 効果タイプ(内部処理用)
-
     public string effect;           // 効果内容(内部処理用)
+    public bool engiCheck;          // 艶技発動可能か(内部処理用)
     public Sprite image;            // 画像データ(表示用)
 
     /// <summary>コストラクタ:カード情報をエンティティから呼び出し各メンバ変数に設定する</summary>
@@ -42,6 +42,7 @@ public class CardModel
         raceNumber = cardEntity.raceNumber;
         effectType = cardEntity.effectType;
         effect = cardEntity.effect;
+        engiCheck = false;
         image = cardEntity.image;
     }
 

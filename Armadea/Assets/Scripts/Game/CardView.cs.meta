@@ -3,7 +3,14 @@ guid: 0101abcd32ac19f4eba4bf2c84142b34
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - nameText: {instanceID: 0}
+  - cpText: {instanceID: 0}
+  - costText: {instanceID: 0}
+  - attributeText: {instanceID: 0}
+  - raceText: {instanceID: 0}
+  - image: {instanceID: 0}
+  - engieffect: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
