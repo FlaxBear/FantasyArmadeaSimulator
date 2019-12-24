@@ -34,10 +34,12 @@ public class DeckController
     /// <param name="deck">デッキリスト</param>
     /// <param name="cost">コスト支払い数</param>
     /// <param name="deckCount">デッキ枚数表示用のテキストオブジェクト</param>
-    public void costPay(List<string> deck, int cost, Text deckCount)
+    public void costPay(List<string> deck, int cost, Text deckCount, short playerNumber)
     {
         for(int i = 0; i < cost; i++)
         {
+            CardModel trashCard = new CardModel(deck[0]);
+            GameManager.instance.setTrash(trashCard.cardName, playerNumber);
             deck.RemoveAt(0);
         }
         deckCountRefresh(deckCount, deck);

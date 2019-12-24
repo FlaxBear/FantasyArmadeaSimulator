@@ -12,39 +12,42 @@ public class DragSupport : MonoBehaviour, IDropHandler
     {
          // 手札からサポートエリアに移動するために必要な変数
         CardMovement card = eventData.pointerDrag.GetComponent<CardMovement>();
+        Transform playerHand = GameManager.instance.getPlayerSupport();
+        Transform playerSupport = GameManager.instance.getPlayerSupport();
 
-        // サポートエリアに4枚以下の場合と4枚の場合で処理が違うため分けている
-        if(this.transform.GetComponentsInChildren<CardController>().Length < 4) {
-            // 4枚以下の場合
-            // このターンで既にサポートエリアにカードセットしているがどうかの判定
-            if(GameManager.instance.supportSetCardCheckResult()) {
-                if(card != null) {
-                    // 手札から手札に送られることを防ぐ
-                    if(card.defaultParent != this.transform) {
-                        card.defaultParent = this.transform;
-                        // カードをセットすればデッキから1枚引く
-                        GameManager.instance.playerOneDraw();
-                        GameManager.instance.playerDeckCountRefresh();
-                        // このターンはこれ以上カードをセット出来ないようにする
-                        GameManager.instance.changeSupportSetCardCheck(false);
+        // このターンで既にサポートエリアにカードセットしているがどうかの判定
+        if(GameManager.instance.supportSetCardCheckResult()) {
+            if(card != null) {
+                if(this.transform == playerSupport && card.defaultParent != this.transform)
+                {
+                    // カード → サポートエリア
+                    if(playerSupport.GetComponentsInChildren<CardController>().Length < 4) {
+                        card.defaultParent = playerSupport;
+                    } else {
+                        return;
+                    }
+                } 
+                else
+                {
+                    // カード → サポートエリアにあるカード
+                    if(playerSupport.GetComponentsInChildren<CardController>().Length < 4) {
+                        card.defaultParent = playerSupport;
+                    } else {
+                        CardController deleteCard = GetComponent<CardController>();
+                        if(deleteCard != null) {
+                            GameManager.instance.setTrash(deleteCard.model.cardName, 1);
+                            Destroy(deleteCard.gameObject);
+                            card.defaultParent = playerSupport;
+                        } else {
+                            return;
+                        }
                     }
                 }
-            }
-        } else {
-            // 4枚の場合
-            // このターンで既にサポートエリアにカードセットしているがどうかの判定
-            if(GameManager.instance.supportSetCardCheckResult()) {
-                if(card != null) {
-                    // 手札から手札に送られることを防ぐ
-                    if(card.defaultParent != this.transform) {
-                        // サポートエリアから1枚選択して捨て場に送る(削除)機能
-                        card.defaultParent = this.transform;
-                        GameManager.instance.playerOneDraw();
-                        GameManager.instance.playerDeckCountRefresh();
-                        // このターンはこれ以上カードをセット出来ないようにする
-                        GameManager.instance.changeSupportSetCardCheck(false);
-                    }
-                }
+                // カードをセットすればデッキから1枚引く
+                GameManager.instance.playerOneDraw();
+                GameManager.instance.playerDeckCountRefresh();
+                // このターンはこれ以上カードをセット出来ないようにする
+                GameManager.instance.changeSupportSetCardCheck(false);
             }
         }
     }

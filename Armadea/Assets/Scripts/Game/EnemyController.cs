@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class EnemyController
 {
     DeckController deckController;                  // デッキコントローラー
+    EngiProcess engiProcess;                        // 艶技処理用のクラス
 
     public EnemyController() {
         deckController = new DeckController();
@@ -43,15 +44,33 @@ public class EnemyController
         CardController card = cardList[0];
         // カードを移動
         card.transform.SetParent(mainTransform);
-        deckController.costPay(deck, card.model.cost, deckCount);
+        deckController.costPay(deck, card.model.cost, deckCount, 2);
     }
 
     
     /// <summary>相手の艶技を出す処理</summary>
     /// <returns>出した場合は,true 出さない場合は,false</returns>
-    public bool enemyBattlePhaseEngi()
+    public bool enemyBattlePhaseEngi(Transform handTransform, Transform engiTransform)
     {
         Debug.Log("相手の艶技行動");
+        List<bool> useCheck = new List<bool>();
+        CardController[] enemyHandList = handTransform.GetComponentsInChildren<CardController>();
+
+        foreach(CardController enemyHand in enemyHandList) {
+            if(enemyHand.model.effectType == 2) {
+                bool result = GameManager.instance.getEngiResult(enemyHand);
+                useCheck.Add(result);
+            } else {
+                useCheck.Add(false);
+            }
+        }
+
+        for(int i = 0; i < useCheck.Count; i++) {
+            if(useCheck[i]) {
+                enemyHandList[i].transform.SetParent(engiTransform);
+                return true;
+            }
+        }
         return false;
     }
 }

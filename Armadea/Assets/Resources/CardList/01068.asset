@@ -23,4 +23,5 @@ MonoBehaviour:
   race: "\u81EA\u7136"
   raceNumber: 10
   effectType: 1
+  effect: 13,5,1500,1,N
   image: {fileID: 0}
