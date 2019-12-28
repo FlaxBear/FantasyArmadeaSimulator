@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
+using UnityEngine.SceneManagement;
 
 /// <summary>Scene Game 上で行う処理</summary>
 public class GameManager : MonoBehaviour
@@ -24,7 +24,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] Text enemyDeckCount = default;                 // 相手(Enemy)のデッキカウントテキストのオブジェクト(Inspectorに設定項目あり)
     [SerializeField] Text playerPointCount = default;               // 自分(Player)のポイントカウントテキストとのオブジェクト(Inspectorに設定項目あり)
     [SerializeField] Text enemyPointCount = default;                // 相手(Enemy)のデポイントカウントテキストとのオブジェクト(Inspectorに設定項目あり)
-    [SerializeField] Transform trashText = default;                      // 捨て場の表示用テキストのオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Transform trashText = default;                 // 捨て場の表示用テキストのオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Transform messageText = default;               // メッセージ表示用テキストのオブジェクト(Inspectorに設定項目あり)
     PointCountController pointCount = default;                      // ポイントコントローラー
     DeckController deckController = default;                        // デッキコントローラー
     EnemyController enemyController = default;                      // エネミーコントローラー
@@ -35,7 +36,9 @@ public class GameManager : MonoBehaviour
     List<string> playerDeck = new List<string>() {
         "01001",
         "01001",
-        "01006",
+        "01001",
+        "01001",
+        "01001",
         "01001",
         "01001",
         "01001",
@@ -74,55 +77,63 @@ public class GameManager : MonoBehaviour
         "01001",
         "01001",
     };
-
+    // 自分(Player)の捨て場リスト変数
     List<string> playerTrash = new List<string>() {};
-
+    // 自分(Player))のポイント置き場
+    int playerPoint = 0;
+    // メインフェイズ時、サポートセット制限管理用変数(true:未セット, false:セット済み)
+    bool playerSupportSetCardCheck = true;
     // 相手(Enemy)のデッキリスト変数
     List<string> enemyDeck = new List<string>() {
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
-        "01035",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
+        "01001",
     };
+    // 相手(Enemy)の捨て場リスト変数
     List<string> enemyTrash = new List<string>() {};
-    int playerPoint = 0;                    // プレイヤー(自分)のポイント置き場
-    int enemyPoint = 0;                     // エネミー(相手)のポイント置き場
+    // 相手(Enemy)のポイント置き場
+    int enemyPoint = 0;
+    // メインフェイズ時、サポートセット制限管理用変数(true:未セット, false:セット済み)
+    bool enemySupportSetCardCheck = true;
     byte gamePhase = 0;                     // フェーズ管理用変数(
                                             // 0:メインフェイズ, 
                                             // 1:バトルフェイズ(キャラセット), 
@@ -130,8 +141,7 @@ public class GameManager : MonoBehaviour
                                             // 3:バトルフェイズ(姫昇天)~次ターン準備
                                             //)
     bool gameFirst = true;                  // 先攻保持プレイヤー管理用変数(true:プレイヤー, false:エネミー)
-    bool supportSetCardCheck = true;        // メインフェイズ時、サポートセット制限管理用変数(true:未セット, false:セット済み)
-    short trashShow = 0;                 // 捨て場を表示しているか(0:表示していない, playerを表示中, enemyを表示中)
+    short trashShow = 0;                    // 捨て場を表示しているか(0:表示していない, playerを表示中, enemyを表示中)
     short engiCount = 0;                    // 艶技発動回数
     public static GameManager instance;     // シングルトン化させるために必要な変数（どこからでもアクセスできるようにする)
 
@@ -158,7 +168,7 @@ public class GameManager : MonoBehaviour
     /// <summary>ゲーム開始時の処理を行う関数</summary>
     void startGame() 
     {
-        trashText.gameObject.SetActive(false);
+        // クラスの初期設定
         pointCount = new PointCountController();
         deckController = new DeckController();
         enemyController = new EnemyController();
@@ -176,11 +186,14 @@ public class GameManager : MonoBehaviour
             playerMainTransform, 
             enemyMainTransform
         );
+
+        messageText.gameObject.SetActive(false);                                // メッセージ表示用のテキストを非表示にする
+        trashText.gameObject.SetActive(false);                                  // 捨て場表示用のテキストを非表示にする
         gamePhase = 0;                                                          // メインフェイズから開始
         gameFirst = true;                                                       // 先攻はプレイヤーに設定(のちに変更)
-        supportSetCardCheck = true;                                             // サポートセットフラグ
+        playerSupportSetCardCheck = true;                                             // サポートセットフラグ
         playerPoint = 0;                                                        // プレイヤー(自分)のポイント
-        enemyPoint = 3;                                                         // エネミー(相手)のポイント
+        enemyPoint = 0;                                                         // エネミー(相手)のポイント
         SetFlagChange(false, false, false);                                     // カード移動を一時的に無効させる
         settingInitHand();                                                      // 各プレイヤーに手札を配る
         deckController.deckCountRefresh(playerDeckCount, playerDeck);           // プレイヤーのデッキカウントテキストを更新
@@ -229,8 +242,6 @@ public class GameManager : MonoBehaviour
         for(int i = 0; i < 4; i++) {
             deckController.giveCardToHand(playerDeck, playerHandTransform, playerCardPrefab);
             deckController.giveCardToHand(enemyDeck, enemyHandTransform, enemyCardPrefab);
-
-            deckController.giveCardToHand(playerDeck, playerSupportTransform, playerCardPrefab);
         }
     }
 
@@ -272,7 +283,10 @@ public class GameManager : MonoBehaviour
         if(gameFirst) {
             SetFlagChange(true, false, false);  // サポートエリアのみ許可
         } else {
-            enemyController.enemyMainPhase(enemyHandTransform, enemySupportTransform, enemyDeck, enemyCardPrefab, enemyDeckCount);
+            if(enemySupportSetCardCheck) {
+                enemyController.enemyMainPhase(enemyHandTransform, enemySupportTransform, enemyDeck, enemyCardPrefab, enemyDeckCount);
+                enemySupportSetCardCheck = false;
+            }
             SetFlagChange(true, false, false);  // サポートエリアのみ許可
         }
     }
@@ -415,6 +429,8 @@ public class GameManager : MonoBehaviour
         // 艶技を使っているか
         if(engiCount != 0)
         {
+            CardController playerMainCard = playerMainTransform.GetComponentsInChildren<CardController>()[0];
+            CardController enemyMainCard = enemyMainTransform.GetComponentsInChildren<CardController>()[0];
             if(engiCount % 2 == 0) {
                 // 偶数なら後攻が勝利している
                 if(gameFirst) {
@@ -422,11 +438,15 @@ public class GameManager : MonoBehaviour
                     pointCount.pointRefresh(enemyPointCount, enemyPoint);
                     deckController.giveCardToHand(playerDeck, playerHandTransform, playerCardPrefab);
                     deckController.deckCountRefresh(playerDeckCount, playerDeck);
+                    Destroy(enemyMainCard.gameObject);
+                    destroyMainCard(playerMainTransform, 1);
                 } else {
                     playerPoint++;
                     pointCount.pointRefresh(playerPointCount, playerPoint);
                     deckController.giveCardToHand(enemyDeck, enemyHandTransform, enemyCardPrefab);
                     deckController.deckCountRefresh(enemyDeckCount, enemyDeck);
+                    Destroy(playerMainCard.gameObject);
+                    destroyMainCard(enemyMainTransform, 2);
                 }
             } else {
                 // 奇数なら先攻が勝利している
@@ -435,14 +455,21 @@ public class GameManager : MonoBehaviour
                     pointCount.pointRefresh(playerPointCount, playerPoint);
                     deckController.giveCardToHand(enemyDeck, enemyHandTransform, enemyCardPrefab);
                     deckController.deckCountRefresh(enemyDeckCount, enemyDeck);
+                    Destroy(playerMainCard.gameObject);
+                    destroyMainCard(enemyMainTransform, 2);
                 } else {
                     enemyPoint++;
                     pointCount.pointRefresh(enemyPointCount, enemyPoint);
                     deckController.giveCardToHand(playerDeck, playerHandTransform, playerCardPrefab);
                     deckController.deckCountRefresh(playerDeckCount, playerDeck);
+                    Destroy(enemyMainCard.gameObject);
+                    destroyMainCard(playerMainTransform, 1);
+
                 }
             }
             flag = false;
+            destoryEngiCard(playerEngiTransform, 1);
+            destoryEngiCard(enemyEngiTransform, 2);
         }
 
         return flag;
@@ -530,6 +557,8 @@ public class GameManager : MonoBehaviour
             deckController.giveCardToHand(playerDeck, playerHandTransform, playerCardPrefab);
             deckController.deckCountRefresh(playerDeckCount, playerDeck);
             pointCount.pointRefresh(enemyPointCount, enemyPoint);
+            Destroy(enemyMainCard.gameObject);
+            destroyMainCard(playerMainTransform, 1);
             Debug.Log("相手の勝ち");
         } else if(playerMainCard.model.cp > enemyMainCard.model.cp) {
             // 自分が勝った場合
@@ -537,6 +566,8 @@ public class GameManager : MonoBehaviour
             deckController.giveCardToHand(enemyDeck, enemyHandTransform, enemyCardPrefab);
             deckController.deckCountRefresh(enemyDeckCount, enemyDeck);
             pointCount.pointRefresh(playerPointCount, playerPoint);
+            Destroy(playerMainCard.gameObject);
+            destroyMainCard(enemyMainTransform, 2);
             Debug.Log("自分の勝ち");
         }　else {
             // 引き分け
@@ -544,6 +575,8 @@ public class GameManager : MonoBehaviour
             deckController.giveCardToHand(enemyDeck, enemyHandTransform, enemyCardPrefab);
             deckController.deckCountRefresh(playerDeckCount, playerDeck);
             deckController.deckCountRefresh(enemyDeckCount, enemyDeck);
+            destroyMainCard(playerMainTransform, 1);
+            destroyMainCard(enemyMainTransform, 2);
             Debug.Log("引き分け");
         }
     }
@@ -558,12 +591,6 @@ public class GameManager : MonoBehaviour
             Debug.Log("Player Win");
         } else if(enemyHandCount == 0) {
             Debug.Log("Enemy Win");
-        } else {
-            // メインと艶技のエリアのカードを全て破壊
-            destroyMainCard(playerMainTransform, 1);
-            destoryEngiCard(playerEngiTransform, 1);
-            destroyMainCard(enemyMainTransform, 2);
-            destoryEngiCard(enemyEngiTransform, 2);
         }
     }
 
@@ -604,7 +631,8 @@ public class GameManager : MonoBehaviour
     void nextTurn(){
         gamePhase = 0;
         gameFirst = !gameFirst;
-        supportSetCardCheck = true;
+        playerSupportSetCardCheck = true;
+        enemySupportSetCardCheck = true;
         engiCount = 0;
         turnPhase();
     }
@@ -620,10 +648,12 @@ public class GameManager : MonoBehaviour
         {
             case 0:
                 // 0:メインフェイズ,
-                if(gameFirst) {
+                if(playerSupportSetCardCheck == false || playerSupportTransform.GetComponentsInChildren<CardController>().Length == 4) {
+                    if(gameFirst) {
                         enemyController.enemyMainPhase(enemyHandTransform, enemySupportTransform, enemyDeck, enemyCardPrefab, enemyDeckCount);
+                    }
                 } else {
-                    
+                    nextTurnCheck = false;
                 }
                 break;
             case 1:
@@ -665,6 +695,7 @@ public class GameManager : MonoBehaviour
         turnPhase();
     }
 
+    /// <summary>ボタンを押すと自分(Player)の捨て場一覧を表示させる関数</summary>
     public void pushPlayerTrashButton()
     {
         string ShowText = "";
@@ -687,6 +718,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    /// <summary>ボタンを押すと相手(Enemy)の捨て場一覧を表示させる関数</summary>
     public void pushEnemyTrashButton()
     {
         string ShowText = "";
@@ -707,6 +739,11 @@ public class GameManager : MonoBehaviour
             trashText.gameObject.SetActive(false);
             trashShow = 0;
         }
+    }
+
+    /// <summary>ボタンを押せばタイトル画面に戻る処理</summary>
+    public void OnBackButton() {
+        SceneManager.LoadScene("Title");
     }
 
     /// <summary>艶技エリアの枚数を返す</summary>
@@ -755,14 +792,14 @@ public class GameManager : MonoBehaviour
     /// <returns>セット処理を行ったかの判定(true: 行っていない, false: 行っている)</returns>
     public bool supportSetCardCheckResult()
     {
-        return supportSetCardCheck;
+        return playerSupportSetCardCheck;
     }
 
     /// <summary>プレイヤーのサポートエリアカードセット処理の行ったかの状態を変更する処理</summary>
     /// <param name="result">変更する状態(true: 行っていない, false: 行っている)</param>
     public void changeSupportSetCardCheck(bool result)
     {
-        supportSetCardCheck = result;
+        playerSupportSetCardCheck = result;
     }
 
     /// <summary>プレイヤー(自分)のポイント置き場の枚数を渡す処理</summary>
@@ -779,11 +816,17 @@ public class GameManager : MonoBehaviour
         return enemyPoint;
     }
 
+    /// <summary>エネミー(相手)の艶技処理確認を行う</summary>
+    /// <param name="handCard">艶技カードコントローラークラスのデータ</param>
+    /// <returns>使用可能かのフラグ</returns>
     public bool getEngiResult(CardController handCard)
     {
-        return engiProcess.engiProcess(handCard.model.effect, 1);
+        return engiProcess.engiProcess(handCard.model.effect, 2);
     }
 
+    /// <summary>各プレイヤーの捨て場にカードをセットする</summary>
+    /// <param name="cardName">カード名</param>
+    /// <param name="playerNumber">プレイヤーナンバー</param>
     public void setTrash(string cardName, short playerNumber)
     {
         if(playerNumber == 1) {
@@ -792,10 +835,22 @@ public class GameManager : MonoBehaviour
             enemyTrash.Add(cardName);
         }
     }
+
+    /// <summary>プレイヤー(自分)のサポートエリアのオブジェクトを返す</summary>
+    /// <returns>プレイヤーのサポートエリアのオブジェクト</returns>
     public Transform getPlayerSupport() {
         return playerSupportTransform;
     }
+
+    /// <summary>エネミー(相手)のサポートエリアのオブジェクトを返す</summary>
+    /// <returns>エネミーのサポートエリアのオブジェクト</returns>
     public Transform getPlayerHand() {
         return playerHandTransform;
+    }
+
+    /// <summary>エネミー(相手)のサポートカードを一枚破壊する</summary>
+    /// <param name="number">削除するカードの順番番号</param>
+    public void destroyEnemySupport(int number) {
+        Destroy(enemySupportTransform.GetComponentsInChildren<CardController>()[number].gameObject);
     }
 }

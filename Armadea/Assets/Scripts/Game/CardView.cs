@@ -57,6 +57,8 @@ public class CardView : MonoBehaviour
         cpText.text = cardModel.cp.ToString();
     }
 
+    /// <summary>艶技使用可能を表示するエフェクトを変更する関数</summary>
+    /// <param name="changeResult">変更する状態</param>
     public void setEngiEffect(bool changeResult)
     {
         engieffect.enabled = changeResult;

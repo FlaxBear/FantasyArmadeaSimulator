@@ -26,7 +26,12 @@ public class EnemyController
         CardController[] cardList = handTransform.GetComponentsInChildren<CardController>();
         CardController card = cardList[0];
         // カードを移動
+
+        if(supportTransform.GetComponentsInChildren<CardController>().Length >= 4) {
+            GameManager.instance.destroyEnemySupport(0);
+        }
         card.transform.SetParent(supportTransform);
+        
         // ドロー&デッキカウント更新
         deckController.giveCardToHand(deck, handTransform, cardPrefab);
         deckController.deckCountRefresh(deckCount, deck);

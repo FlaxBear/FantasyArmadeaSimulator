@@ -9,7 +9,7 @@ using UnityEngine;
 */
 public class CardController : MonoBehaviour
 {
-    public CardView view;                 // カード表示用クラス
+    public CardView view;          // カード表示用クラス
     public CardModel model;        // カードデータ用クラス
     public CardMovement movement;  // カード移動用クラス
 
