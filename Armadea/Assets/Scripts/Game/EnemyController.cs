@@ -54,8 +54,13 @@ public class EnemyController
 
     
     /// <summary>相手の艶技を出す処理</summary>
+    /// <param name="handTransform">手札のオブジェクト</param>
+    /// <param name="engiTransform">艶技エリアのオブジェクト</param>
+    /// <param name="deck">デッキリスト</param>
+    /// <param name="cardPrefab">カードプレハブ</param>
+    /// <param name="deckCount">デッキ枚数用テキストオブジェクト</param>
     /// <returns>出した場合は,true 出さない場合は,false</returns>
-    public bool enemyBattlePhaseEngi(Transform handTransform, Transform engiTransform)
+    public bool enemyBattlePhaseEngi(Transform handTransform, Transform engiTransform, List<string> deck, CardController cardPrefab, Text deckCount)
     {
         Debug.Log("相手の艶技行動");
         List<bool> useCheck = new List<bool>();
@@ -73,6 +78,8 @@ public class EnemyController
         for(int i = 0; i < useCheck.Count; i++) {
             if(useCheck[i]) {
                 enemyHandList[i].transform.SetParent(engiTransform);
+                deckController.giveCardToHand(deck, handTransform, cardPrefab);
+                deckController.deckCountRefresh(deckCount, deck);
                 return true;
             }
         }

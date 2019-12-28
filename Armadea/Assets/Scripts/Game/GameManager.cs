@@ -37,45 +37,43 @@ public class GameManager : MonoBehaviour
         "01001",
         "01001",
         "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
+        "01002",
+        "01002",
+        "01002",
+        "01003",
+        "01003",
+        "01003",
+        "01004",
+        "01004",
+        "01004",
+        "01005",
+        "01005",
+        "01005",
+        "01006",
+        "01006",
+        "01006",
+        "01007",
+        "01007",
+        "01007",
+        "01008",
+        "01008",
+        "01008",
+        "01009",
+        "01009",
+        "01009",
+        "01010",
+        "01010",
+        "01010",
+        "01011",
+        "01011",
+        "01011",
+        "01012",
+        "01012",
+        "01012",
+        "01015",
+        "01015",
+        "01016",
+        "01016",
     };
     // 自分(Player)の捨て場リスト変数
     List<string> playerTrash = new List<string>() {};
@@ -85,48 +83,46 @@ public class GameManager : MonoBehaviour
     bool playerSupportSetCardCheck = true;
     // 相手(Enemy)のデッキリスト変数
     List<string> enemyDeck = new List<string>() {
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
-        "01001",
+        "01081",
+        "01081",
+        "01081",
+        "01082",
+        "01082",
+        "01082",
+        "01083",
+        "01083",
+        "01083",
+        "01084",
+        "01084",
+        "01084",
+        "01085",
+        "01085",
+        "01085",
+        "01086",
+        "01086",
+        "01086",
+        "01087",
+        "01087",
+        "01087",
+        "01088",
+        "01088",
+        "01088",
+        "01089",
+        "01089",
+        "01089",
+        "01090",
+        "01090",
+        "01090",
+        "01091",
+        "01091",
+        "01091",
+        "01092",
+        "01092",
+        "01092",
+        "01099",
+        "01099",
+        "01100",
+        "01100",
     };
     // 相手(Enemy)の捨て場リスト変数
     List<string> enemyTrash = new List<string>() {};
@@ -195,12 +191,26 @@ public class GameManager : MonoBehaviour
         playerPoint = 0;                                                        // プレイヤー(自分)のポイント
         enemyPoint = 0;                                                         // エネミー(相手)のポイント
         SetFlagChange(false, false, false);                                     // カード移動を一時的に無効させる
+
+        shuffleDeck(playerDeck);                                                // プレイヤー(自分)デッキをシャッフルする
+        shuffleDeck(enemyDeck);                                                 // エネミー(相手)デッキをシャッフルする
         settingInitHand();                                                      // 各プレイヤーに手札を配る
         deckController.deckCountRefresh(playerDeckCount, playerDeck);           // プレイヤーのデッキカウントテキストを更新
         deckController.deckCountRefresh(enemyDeckCount, enemyDeck);             // エネミーのデッキカウントテキストを更新
         pointCount.pointRefresh(playerPointCount, playerPoint);                 // プレイヤー(自分)のポイントテキストを更新
         pointCount.pointRefresh(enemyPointCount, enemyPoint);                   // エネミー(相手)のポイントテキストを更新
         turnPhase();                                                            // フェイズへ
+    }
+
+    void shuffleDeck(List<string> deck)
+    {
+        // デッキをシャッフルする
+        for(int i = 0; i < deck.Count; i++) {
+            string temp = deck[i];
+            int randomIndex = Random.Range(0, deck.Count);
+            deck[i] = deck[randomIndex];
+            deck[randomIndex] = temp;
+        }
     }
 
     /// <summary>手札から場に出す際の場所の許可を管理する関数</summary>
@@ -242,6 +252,8 @@ public class GameManager : MonoBehaviour
         for(int i = 0; i < 4; i++) {
             deckController.giveCardToHand(playerDeck, playerHandTransform, playerCardPrefab);
             deckController.giveCardToHand(enemyDeck, enemyHandTransform, enemyCardPrefab);
+
+            deckController.giveCardToHand(playerDeck, playerSupportTransform, playerCardPrefab);
         }
     }
 
@@ -373,7 +385,7 @@ public class GameManager : MonoBehaviour
             // 1回だけ処理を行い、あとはpushEndTurnEndButton関数の方で処理を行う
             if(engiCount == 0) {
                 // 相手は艶技を出すかどうかのチェック
-                bool engiContinueCheck = enemyController.enemyBattlePhaseEngi(enemyHandTransform, enemyEngiTransform);
+                bool engiContinueCheck = enemyController.enemyBattlePhaseEngi(enemyHandTransform, enemyEngiTransform, enemyDeck, enemyCardPrefab, enemyDeckCount);
                 if(engiContinueCheck) {
                     // 出した場合、継続でプレイヤーに出す処理を行う
                     engiCount++;
@@ -464,7 +476,6 @@ public class GameManager : MonoBehaviour
                     deckController.deckCountRefresh(playerDeckCount, playerDeck);
                     Destroy(enemyMainCard.gameObject);
                     destroyMainCard(playerMainTransform, 1);
-
                 }
             }
             flag = false;
@@ -673,7 +684,7 @@ public class GameManager : MonoBehaviour
                 // 相手が出したなら継続、出さなけれな次のフェーズへ
                 if(EngiCheckCount(playerEngiTransform) == 1) {
                     engiCount++;
-                    nextTurnCheck = enemyController.enemyBattlePhaseEngi(enemyHandTransform, enemyEngiTransform);
+                    nextTurnCheck = enemyController.enemyBattlePhaseEngi(enemyHandTransform, enemyEngiTransform, enemyDeck, enemyCardPrefab, enemyDeckCount);
                     if(nextTurnCheck) {
                         engiCount++;
                         nextTurnCheck = false;
