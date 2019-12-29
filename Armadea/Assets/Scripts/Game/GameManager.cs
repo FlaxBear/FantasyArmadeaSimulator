@@ -129,7 +129,7 @@ public class GameManager : MonoBehaviour
     // 相手(Enemy)のポイント置き場
     int enemyPoint = 0;
     // メインフェイズ時、サポートセット制限管理用変数(true:未セット, false:セット済み)
-    bool enemySupportSetCardCheck = true;
+    bool enemySetCardCheck = true;
     byte gamePhase = 0;                     // フェーズ管理用変数(
                                             // 0:メインフェイズ, 
                                             // 1:バトルフェイズ(キャラセット), 
@@ -183,18 +183,23 @@ public class GameManager : MonoBehaviour
             enemyMainTransform
         );
 
+        messageText.GetComponentInChildren<Text>().text = "";                   // メッセージ表示用のテキストを初期化する
         messageText.gameObject.SetActive(false);                                // メッセージ表示用のテキストを非表示にする
+        trashText.GetComponentInChildren<Text>().text = "";                     // 捨て場表示用のテキストを初期化する
         trashText.gameObject.SetActive(false);                                  // 捨て場表示用のテキストを非表示にする
+
         gamePhase = 0;                                                          // メインフェイズから開始
         gameFirst = true;                                                       // 先攻はプレイヤーに設定(のちに変更)
         playerSupportSetCardCheck = true;                                             // サポートセットフラグ
         playerPoint = 0;                                                        // プレイヤー(自分)のポイント
         enemyPoint = 0;                                                         // エネミー(相手)のポイント
+
         SetFlagChange(false, false, false);                                     // カード移動を一時的に無効させる
 
         shuffleDeck(playerDeck);                                                // プレイヤー(自分)デッキをシャッフルする
         shuffleDeck(enemyDeck);                                                 // エネミー(相手)デッキをシャッフルする
         settingInitHand();                                                      // 各プレイヤーに手札を配る
+        
         deckController.deckCountRefresh(playerDeckCount, playerDeck);           // プレイヤーのデッキカウントテキストを更新
         deckController.deckCountRefresh(enemyDeckCount, enemyDeck);             // エネミーのデッキカウントテキストを更新
         pointCount.pointRefresh(playerPointCount, playerPoint);                 // プレイヤー(自分)のポイントテキストを更新
@@ -202,6 +207,8 @@ public class GameManager : MonoBehaviour
         turnPhase();                                                            // フェイズへ
     }
 
+    /// <summary>デッキリストのランダム配置にする</summary>
+    /// <param name="deck">デッキリスト</param>
     void shuffleDeck(List<string> deck)
     {
         // デッキをシャッフルする
@@ -214,32 +221,38 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>手札から場に出す際の場所の許可を管理する関数</summary>
-    /// <param name="support">サポートエリアの許可</param>
-    /// <param name="main">メインエリアの許可</param>
-    /// <param name="engi">艶技エリアの許可</param>
+    /// <param name="support">サポートエリアの許可(true:許可,false:禁止)</param>
+    /// <param name="main">メインエリアの許可(true:許可,false:禁止)</param>
+    /// <param name="engi">艶技エリアの許可(true:許可,false:禁止)</param>
     void SetFlagChange(bool support, bool main, bool engi)
     {
         // サポートエリアの許可
         if(support) {
+            // 許可
             playerHandTransform.GetComponent<DragSupport>().enabled = true;
             playerSupportTransform.GetComponent<DragSupport>().enabled = true;
         } else {
+            // 禁止
             playerHandTransform.GetComponent<DragSupport>().enabled = false;
             playerSupportTransform.GetComponent<DragSupport>().enabled = false;
         }
         // メインエリアのセット許可
         if(main) {
+            // 許可
             playerHandTransform.GetComponent<DragMain>().enabled = true;
             playerMainTransform.GetComponent<DragMain>().enabled = true;
         } else {
+            // 禁止
             playerHandTransform.GetComponent<DragMain>().enabled = false;
             playerMainTransform.GetComponent<DragMain>().enabled = false;
         }
         // 艶技エリアのセット許可
         if(engi) {
+            // 許可
             playerHandTransform.GetComponent<DragEngi>().enabled = true;
             playerEngiTransform.GetComponent<DragEngi>().enabled = true;
         } else {
+            // 禁止
             playerHandTransform.GetComponent<DragEngi>().enabled = false;
             playerEngiTransform.GetComponent<DragEngi>().enabled = false;
         }
@@ -252,36 +265,36 @@ public class GameManager : MonoBehaviour
         for(int i = 0; i < 4; i++) {
             deckController.giveCardToHand(playerDeck, playerHandTransform, playerCardPrefab);
             deckController.giveCardToHand(enemyDeck, enemyHandTransform, enemyCardPrefab);
-
-            deckController.giveCardToHand(playerDeck, playerSupportTransform, playerCardPrefab);
         }
     }
 
     /// <summary>各フェーズに処理を行うための処理関数</summary>
     void turnPhase()
     {
+        // フェーズのメッセージ表示
+        phaseMessage();
         switch(gamePhase)
         {
             case 0:
                 // 0:メインフェイズ,
-                mainPhase();
+                StartCoroutine(mainPhase());
                 break;
             case 1:
-                // 1:バトルフェイズ(キャラセット), 
-                battlePhaseCharSet();
+                // 1:バトルフェイズ(キャラセット),
+                StartCoroutine(battlePhaseCharSet());
                 break;
             case 2:
                 // サポートエリアタイプ一致CP補正
                 supportTypeCardCPChange();
                 // 2:バトルフェイズ(艶技),
-                battlePhaseEngi();
+                StartCoroutine(battlePhaseEngi());
                 break;
             case 3:
                 // 艶技エフェクトのリセット
                 engiEffectReset(playerHandTransform);
                 engiEffectReset(enemyHandTransform);
                 // 3:バトルフェイズ(姫昇天)~次ターン準備
-                battlePhaseHimeToNextTurn();
+                StartCoroutine(battlePhaseHimeToNextTurn());
                 break;
             default:
                 // 0 ~ 4以外はありえない
@@ -289,27 +302,73 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void phaseMessage() 
+    {
+        string message = "";
+        switch(gamePhase){
+            case 0:
+                // 0:メインフェイズ,
+                message = "メインフェイズ";
+                break;
+            case 1:
+                // 1:バトルフェイズ(キャラセット), 
+                message = "バトルフェイズ";
+                break;
+            case 2:
+                // 2:バトルフェイズ(艶技),
+                message = "艶技発動";
+                if(engiCount != 0) {
+                    message += " " + engiCount.ToString() + "回目";
+                }
+                break;
+            case 3:
+                // 3:バトルフェイズ(姫昇天)~次ターン準備
+                message = "姫昇天チェック";
+                break;
+            case 4:
+                // 4:CP計算
+                message = "CP計算";
+                break;
+        }
+        StopCoroutine(showMessage(""));
+        StartCoroutine(showMessage(message));
+    }
+
+    IEnumerator showMessage(string message)
+    {
+        messageText.gameObject.SetActive(true);
+        messageText.GetComponentInChildren<Text>().text = message;
+        yield return new WaitForSeconds(3);
+        messageText.gameObject.SetActive(false);
+    }
+
     /// <summary>メインフェーズ時に行う処理</summary>
-    void mainPhase(){
-        Debug.Log("メインフェーズ");
+    //void mainPhase(){
+    IEnumerator mainPhase(){
         if(gameFirst) {
             SetFlagChange(true, false, false);  // サポートエリアのみ許可
         } else {
-            if(enemySupportSetCardCheck) {
+            if(enemySetCardCheck) {
+                yield return new WaitForSeconds(3);
                 enemyController.enemyMainPhase(enemyHandTransform, enemySupportTransform, enemyDeck, enemyCardPrefab, enemyDeckCount);
-                enemySupportSetCardCheck = false;
+                enemySetCardCheck = false;
             }
             SetFlagChange(true, false, false);  // サポートエリアのみ許可
         }
     }
 
     /// <summary>バトルフェーズのキャラクターセット時に行う処理</summary>
-    void battlePhaseCharSet(){
-        Debug.Log("バトルフェーズ:キャラクターセット");
+    //void battlePhaseCharSet(){
+    IEnumerator battlePhaseCharSet() {
+        enemySetCardCheck = true;
         if(gameFirst) {
             SetFlagChange(false, true, false);  // メインエリアのみ許可
         } else {
-            enemyController.enemyBattlePhaseCharSet(enemyHandTransform, enemyMainTransform, enemyDeck, enemyDeckCount);
+            if(enemySetCardCheck) {
+                yield return new WaitForSeconds(3);
+                enemyController.enemyBattlePhaseCharSet(enemyHandTransform, enemyMainTransform, enemyDeck, enemyDeckCount);
+                enemySetCardCheck = false;
+            }
             SetFlagChange(false, true, false);  // メインエリアのみ許可
         }
     }
@@ -347,9 +406,8 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>バトルフェーズの艶技発動時に行う処理</summary>
-    void battlePhaseEngi(){
-        Debug.Log("バトルフェーズ:艶技発動");
-
+    //void battlePhaseEngi(){
+    IEnumerator battlePhaseEngi() {
         // プレイヤー(自分)の艶技エリアにカードがある場合削除
         if(EngiCheckCount(playerEngiTransform) > 0) {
             CardController[] engiCardList = playerEngiTransform.GetComponentsInChildren<CardController>();
@@ -389,6 +447,7 @@ public class GameManager : MonoBehaviour
                 if(engiContinueCheck) {
                     // 出した場合、継続でプレイヤーに出す処理を行う
                     engiCount++;
+                    yield return new WaitForSeconds(3);
                     CardController[] playerHandList = playerHandTransform.GetComponentsInChildren<CardController>();
                     foreach(CardController playerHandCard in playerHandList) {
                         if(playerHandCard.model.effectType == 2) {
@@ -421,13 +480,18 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>バトルフェイズ(姫昇天)~次ターン準備までに行う処理</summary>
-    void battlePhaseHimeToNextTurn() {
-        
-        if(engiJudgment()) {
+    //void battlePhaseHimeToNextTurn() {
+    IEnumerator battlePhaseHimeToNextTurn() {
+        bool engiflag = engiJudgment();
+        if(engiflag) {
+            yield return new WaitForSeconds(3);
             battlePhaseHime();
+            yield return new WaitForSeconds(3);
             battlePhaseCale();
         }
-        endPhase();
+        yield return new WaitForSeconds(3);
+        StartCoroutine(endPhase());
+        yield return new WaitForSeconds(3);
         nextTurn();
     }
 
@@ -446,6 +510,8 @@ public class GameManager : MonoBehaviour
             if(engiCount % 2 == 0) {
                 // 偶数なら後攻が勝利している
                 if(gameFirst) {
+                    StopCoroutine(showMessage(""));
+                    StartCoroutine(showMessage("艶技発動により相手がバトルに勝利"));
                     enemyPoint++;
                     pointCount.pointRefresh(enemyPointCount, enemyPoint);
                     deckController.giveCardToHand(playerDeck, playerHandTransform, playerCardPrefab);
@@ -453,6 +519,8 @@ public class GameManager : MonoBehaviour
                     Destroy(enemyMainCard.gameObject);
                     destroyMainCard(playerMainTransform, 1);
                 } else {
+                    StopCoroutine(showMessage(""));
+                    StartCoroutine(showMessage("艶技発動により自分がバトルに勝利"));
                     playerPoint++;
                     pointCount.pointRefresh(playerPointCount, playerPoint);
                     deckController.giveCardToHand(enemyDeck, enemyHandTransform, enemyCardPrefab);
@@ -463,6 +531,8 @@ public class GameManager : MonoBehaviour
             } else {
                 // 奇数なら先攻が勝利している
                 if(gameFirst) {
+                    StopCoroutine(showMessage(""));
+                    StartCoroutine(showMessage("艶技発動により自分がバトルに勝利"));
                     playerPoint++;
                     pointCount.pointRefresh(playerPointCount, playerPoint);
                     deckController.giveCardToHand(enemyDeck, enemyHandTransform, enemyCardPrefab);
@@ -470,6 +540,8 @@ public class GameManager : MonoBehaviour
                     Destroy(playerMainCard.gameObject);
                     destroyMainCard(enemyMainTransform, 2);
                 } else {
+                    StopCoroutine(showMessage(""));
+                    StartCoroutine(showMessage("艶技発動により相手がバトルに勝利"));
                     enemyPoint++;
                     pointCount.pointRefresh(enemyPointCount, enemyPoint);
                     deckController.giveCardToHand(playerDeck, playerHandTransform, playerCardPrefab);
@@ -488,13 +560,13 @@ public class GameManager : MonoBehaviour
 
     /// <summary>バトルフェーズの姫昇天発動時に行う処理</summary>
     void battlePhaseHime(){
-        Debug.Log("バトルフェーズ:姫昇天");
         // プレイヤー(自分)側の処理
         himeProcess(playerDeck, playerSupportTransform, playerMainTransform, enemyMainTransform, 1);
         deckController.deckCountRefresh(playerDeckCount, playerDeck);
         // エネミー(相手)側の処理
         himeProcess(enemyDeck, enemySupportTransform, enemyMainTransform, playerMainTransform, 2);
         deckController.deckCountRefresh(enemyDeckCount, enemyDeck);
+        gamePhase++;
     }
 
     /// <summary>姫昇天を発動の処理</summary>
@@ -505,6 +577,14 @@ public class GameManager : MonoBehaviour
     /// <param name="playerNumber">誰が実行したか(1:プレイヤー(自分),2:エネミー(相手))</param>
     void himeProcess(List<string> deck, Transform supportTransform, Transform playerMainTransform, Transform enemyMainTransform, short playerNumber) {
         bool himeResult = false;
+        string message = "";
+
+        if(playerNumber == 1) {
+            message = "自分 ";
+        } else {
+            message = "相手 ";
+        }
+
         // デッキにカードが0枚場合以外は、処理を行う
         if(deck.Count > 0) 
         {
@@ -521,7 +601,9 @@ public class GameManager : MonoBehaviour
                 himeResult = himeCheck(supportTransform, playerMainTransform, himeCard);
                 if(himeResult) {
                     himeAscension.himeAscension(himeCard.effect, playerNumber);
-                    Debug.Log("プレイヤー姫昇天発動");
+                    message += himeCard.cardName;
+                    StopCoroutine(showMessage(""));
+                    StartCoroutine(showMessage("姫昇天発動!!:" + message));
                 }
             }
         }
@@ -554,14 +636,10 @@ public class GameManager : MonoBehaviour
 
     /// <summary>バトルフェーズのCP計算時に行う処理</summary>
     void battlePhaseCale(){
-        Debug.Log("CP計算");
-
+        string message = "";
         CardController playerMainCard = playerMainTransform.GetComponentsInChildren<CardController>()[0];
         CardController enemyMainCard = enemyMainTransform.GetComponentsInChildren<CardController>()[0];
 
-        Debug.Log("Player:" + playerMainCard.model.cp.ToString());
-        Debug.Log("Enemy:" + enemyMainCard.model.cp.ToString());
-        
         if(playerMainCard.model.cp < enemyMainCard.model.cp) {
             // 相手が勝った場合
             enemyPoint++;
@@ -570,7 +648,7 @@ public class GameManager : MonoBehaviour
             pointCount.pointRefresh(enemyPointCount, enemyPoint);
             Destroy(enemyMainCard.gameObject);
             destroyMainCard(playerMainTransform, 1);
-            Debug.Log("相手の勝ち");
+            message = "相手の勝ち ";
         } else if(playerMainCard.model.cp > enemyMainCard.model.cp) {
             // 自分が勝った場合
             playerPoint++;
@@ -579,7 +657,7 @@ public class GameManager : MonoBehaviour
             pointCount.pointRefresh(playerPointCount, playerPoint);
             Destroy(playerMainCard.gameObject);
             destroyMainCard(enemyMainTransform, 2);
-            Debug.Log("自分の勝ち");
+            message = "自分の勝ち ";
         }　else {
             // 引き分け
             deckController.giveCardToHand(playerDeck, playerHandTransform, playerCardPrefab);
@@ -588,20 +666,42 @@ public class GameManager : MonoBehaviour
             deckController.deckCountRefresh(enemyDeckCount, enemyDeck);
             destroyMainCard(playerMainTransform, 1);
             destroyMainCard(enemyMainTransform, 2);
-            Debug.Log("引き分け");
+            message = "引き分け ";
         }
+
+        message += "自分:" + playerMainCard.model.cp.ToString() + " 相手:" + enemyMainCard.model.cp.ToString();
+        StopCoroutine(showMessage(""));
+        StartCoroutine(showMessage(message));
     }
 
     /// <summary>エンドフェイズに行う処理</summary>
-    void endPhase(){
-        Debug.Log("エンドフェイズ");
+    //void endPhase(){
+    IEnumerator endPhase() {
+        bool gameEndFlag = true;
         int playerHandCount = playerHandTransform.GetComponentsInChildren<CardController>().Length;
         int enemyHandCount = enemyHandTransform.GetComponentsInChildren<CardController>().Length;
+        int playerDeckCount = playerDeck.Count;
+        int enemyDeckCount = enemyDeck.Count;
 
         if(playerHandCount == 0) {
-            Debug.Log("Player Win");
+            StopCoroutine(showMessage(""));
+            StartCoroutine(showMessage("勝利"));
         } else if(enemyHandCount == 0) {
-            Debug.Log("Enemy Win");
+            StopCoroutine(showMessage(""));
+            StartCoroutine(showMessage("負け"));
+        } else if(playerDeckCount == 0) {
+            StopCoroutine(showMessage(""));
+            StartCoroutine(showMessage("負け"));
+        } else if(enemyDeckCount == 0) {
+            StopCoroutine(showMessage(""));
+            StartCoroutine(showMessage("勝利"));
+        } else {
+            gameEndFlag = false;
+        }
+
+        if(gameEndFlag) {
+            yield return new WaitForSeconds(3);
+            SceneManager.LoadScene("Title");
         }
     }
 
@@ -637,14 +737,14 @@ public class GameManager : MonoBehaviour
         }
     }
 
-
     /// <summary>次ターン時のために行う処理</summary>
     void nextTurn(){
         gamePhase = 0;
         gameFirst = !gameFirst;
         playerSupportSetCardCheck = true;
-        enemySupportSetCardCheck = true;
+        enemySetCardCheck = true;
         engiCount = 0;
+        StopAllCoroutines();
         turnPhase();
     }
 
@@ -664,7 +764,9 @@ public class GameManager : MonoBehaviour
                         enemyController.enemyMainPhase(enemyHandTransform, enemySupportTransform, enemyDeck, enemyCardPrefab, enemyDeckCount);
                     }
                 } else {
-                    nextTurnCheck = false;
+                    StopCoroutine(showMessage(""));
+                    StartCoroutine(showMessage("サポートエリアにカードをセットしてください"));
+                    return;
                 }
                 break;
             case 1:
@@ -675,6 +777,8 @@ public class GameManager : MonoBehaviour
                         enemyController.enemyBattlePhaseCharSet(enemyHandTransform, enemyMainTransform, enemyDeck, enemyDeckCount);
                     }
                 } else {
+                    StopCoroutine(showMessage(""));
+                    StartCoroutine(showMessage("メインエリアにカードをセットしてください"));
                     return;
                 }
                 break;
