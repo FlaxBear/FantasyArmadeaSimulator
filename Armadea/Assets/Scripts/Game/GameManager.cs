@@ -26,6 +26,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] Text enemyPointCount = default;                // 相手(Enemy)のデポイントカウントテキストとのオブジェクト(Inspectorに設定項目あり)
     [SerializeField] Transform trashText = default;                 // 捨て場の表示用テキストのオブジェクト(Inspectorに設定項目あり)
     [SerializeField] Transform messageText = default;               // メッセージ表示用テキストのオブジェクト(Inspectorに設定項目あり)
+    [SerializeField] Transform phaseMessageText = default;          // フェーズメッセージ表示用テキストのオブジェクト(Inspectorに設定項目あり)
     PointCountController pointCount = default;                      // ポイントコントローラー
     DeckController deckController = default;                        // デッキコントローラー
     EnemyController enemyController = default;                      // エネミーコントローラー
@@ -277,16 +278,19 @@ public class GameManager : MonoBehaviour
         {
             case 0:
                 // 0:メインフェイズ,
+                phaseMessageText.GetComponentInChildren<Text>().text = "Main";
                 StartCoroutine(mainPhase());
                 break;
             case 1:
                 // 1:バトルフェイズ(キャラセット),
+                phaseMessageText.GetComponentInChildren<Text>().text = "Battle";
                 StartCoroutine(battlePhaseCharSet());
                 break;
             case 2:
                 // サポートエリアタイプ一致CP補正
                 supportTypeCardCPChange();
                 // 2:バトルフェイズ(艶技),
+                phaseMessageText.GetComponentInChildren<Text>().text = "Battle:\nEngi";
                 StartCoroutine(battlePhaseEngi());
                 break;
             case 3:
@@ -349,7 +353,7 @@ public class GameManager : MonoBehaviour
             SetFlagChange(true, false, false);  // サポートエリアのみ許可
         } else {
             if(enemySetCardCheck) {
-                yield return new WaitForSeconds(3);
+                yield return new WaitForSeconds(2);
                 enemyController.enemyMainPhase(enemyHandTransform, enemySupportTransform, enemyDeck, enemyCardPrefab, enemyDeckCount);
                 enemySetCardCheck = false;
             }
@@ -365,7 +369,7 @@ public class GameManager : MonoBehaviour
             SetFlagChange(false, true, false);  // メインエリアのみ許可
         } else {
             if(enemySetCardCheck) {
-                yield return new WaitForSeconds(3);
+                yield return new WaitForSeconds(2);
                 enemyController.enemyBattlePhaseCharSet(enemyHandTransform, enemyMainTransform, enemyDeck, enemyDeckCount);
                 enemySetCardCheck = false;
             }
@@ -447,7 +451,7 @@ public class GameManager : MonoBehaviour
                 if(engiContinueCheck) {
                     // 出した場合、継続でプレイヤーに出す処理を行う
                     engiCount++;
-                    yield return new WaitForSeconds(3);
+                    yield return new WaitForSeconds(2);
                     CardController[] playerHandList = playerHandTransform.GetComponentsInChildren<CardController>();
                     foreach(CardController playerHandCard in playerHandList) {
                         if(playerHandCard.model.effectType == 2) {
@@ -484,14 +488,15 @@ public class GameManager : MonoBehaviour
     IEnumerator battlePhaseHimeToNextTurn() {
         bool engiflag = engiJudgment();
         if(engiflag) {
-            yield return new WaitForSeconds(3);
+            phaseMessageText.GetComponentInChildren<Text>().text = "Hime\nCheck";
+            yield return new WaitForSeconds(2);
             battlePhaseHime();
-            yield return new WaitForSeconds(3);
+            yield return new WaitForSeconds(2);
             battlePhaseCale();
         }
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(2);
         StartCoroutine(endPhase());
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(2);
         nextTurn();
     }
 
@@ -700,7 +705,7 @@ public class GameManager : MonoBehaviour
         }
 
         if(gameEndFlag) {
-            yield return new WaitForSeconds(3);
+            yield return new WaitForSeconds(2);
             SceneManager.LoadScene("Title");
         }
     }
